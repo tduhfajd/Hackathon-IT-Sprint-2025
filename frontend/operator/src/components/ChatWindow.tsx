@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { WS_URL } from '../config';
+import { WS_URL, API_URL } from '../config';
 
 interface Message {
   id: string;
@@ -11,11 +11,26 @@ interface Message {
   created_at: string;
 }
 
+interface AIResponse {
+  suggested_text: string;
+  confidence: number;
+  category_suggestion?: string;
+  priority_suggestion?: string;
+}
+
 interface ChatWindowProps {
   appealId: string;
   operatorId: string;
   onClose: () => void;
 }
+
+const QUICK_REPLIES = [
+  'Спасибо за обращение!',
+  'Благодарю за информацию.',
+  'Были рады вам помочь.',
+  'До свидания!',
+  'Хорошего дня!',
+];
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -23,10 +38,39 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }
   const [isTyping, setIsTyping] = useState(false);
   const [citizenTyping, setCitizenTyping] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [aiResponse, setAiResponse] = useState<AIResponse | null>(null);
+  const [aiLoading, setAiLoading] = useState(true);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
   
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Загрузка AI ответа
+  useEffect(() => {
+    const fetchAIResponse = async () => {
+      try {
+        setAiLoading(true);
+        const response = await fetch(`${API_URL}/api/appeals/${appealId}/ai-response`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          setAiResponse({
+            suggested_text: data.data.suggested_text,
+            confidence: data.data.confidence,
+            category_suggestion: data.data.category_suggestion,
+            priority_suggestion: data.data.priority_suggestion
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load AI response:', error);
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    fetchAIResponse();
+  }, [appealId]);
 
   useEffect(() => {
     // Подключение к WebSocket
@@ -173,6 +217,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }
     return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const handleUseAIResponse = () => {
+    if (aiResponse) {
+      setNewMessage(aiResponse.suggested_text);
+    }
+  };
+
+  const handleQuickReply = (text: string) => {
+    setNewMessage(prev => prev ? `${prev} ${text}` : text);
+    setShowQuickReplies(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl h-5/6 flex flex-col">
@@ -238,21 +293,82 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }
           <div ref={messagesEndRef} />
         </div>
 
+        {/* AI Suggested Response */}
+        {aiResponse && (
+          <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-t border-purple-200">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-purple-600 font-semibold text-sm">🤖 AI предлагает:</span>
+                <span className="text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">
+                  Уверенность: {Math.round(aiResponse.confidence * 100)}%
+                </span>
+              </div>
+              <button
+                onClick={handleUseAIResponse}
+                className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded transition"
+              >
+                Использовать ответ
+              </button>
+            </div>
+            <p className="text-sm text-gray-700 bg-white p-3 rounded border border-purple-200 whitespace-pre-wrap">
+              {aiResponse.suggested_text}
+            </p>
+          </div>
+        )}
+
+        {aiLoading && (
+          <div className="p-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+              <span>Загрузка AI рекомендаций...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Replies */}
+        <div className="px-4 pt-2 bg-white border-t border-gray-200">
+          <button
+            onClick={() => setShowQuickReplies(!showQuickReplies)}
+            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+          >
+            {showQuickReplies ? '▼' : '▶'} Быстрые ответы
+          </button>
+          {showQuickReplies && (
+            <div className="flex flex-wrap gap-2 mt-2 mb-2">
+              {QUICK_REPLIES.map((reply, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickReply(reply)}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full border border-gray-300 transition"
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Форма ввода */}
-        <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-200 rounded-b-lg">
+        <form onSubmit={handleSendMessage} className="p-4 bg-white rounded-b-lg">
           <div className="flex gap-2">
-            <input
-              type="text"
+            <textarea
               value={newMessage}
               onChange={(e) => handleTyping(e.target.value)}
-              placeholder="Введите сообщение..."
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+              placeholder="Введите сообщение... (Enter - отправить, Shift+Enter - новая строка)"
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              rows={3}
               disabled={!connected}
             />
             <button
               type="submit"
               disabled={!connected || !newMessage.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-200"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-200 h-fit"
             >
               Отправить
             </button>
