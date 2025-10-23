@@ -47,9 +47,11 @@ export class AppealController {
 
       const appealData: CreateAppealData = {
         ...req.body,
-        user_id: citizenUserId
+        user_id: citizenUserId,
+        category_suggestion: req.body.subject // Use user's selected category from dropdown
       };
       
+      logger.info('AppealController: Creating appeal with data', { appealData });
       const appeal = await this.appealModel.create(appealData);
       
       logger.info(`Appeal created`, { 

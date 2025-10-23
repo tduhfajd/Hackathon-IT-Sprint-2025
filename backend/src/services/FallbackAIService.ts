@@ -24,8 +24,8 @@ export class FallbackAIService {
 
     const text = `${subject} ${description}`.toLowerCase();
 
-    // Simple keyword-based category detection
-    const category = this.detectCategory(text);
+    // Category is already selected by user in dropdown - use it directly
+    const category = subject;
     const priority = this.detectPriority(text);
     const sentiment = this.detectSentiment(text);
     const keywords = this.extractKeywords(text);
