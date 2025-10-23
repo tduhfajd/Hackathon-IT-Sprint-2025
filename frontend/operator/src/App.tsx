@@ -308,8 +308,8 @@ function App() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номер</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тема</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Описание</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Приоритет</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тональность</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
@@ -322,13 +322,13 @@ function App() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {appeal.tracking_number}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                          {appeal.subject}
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                            {appeal.category_suggestion || 'Не определена'}
+                            {appeal.category_suggestion || appeal.subject}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate">
+                          {appeal.description}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(appeal.priority_suggestion)}`}>
@@ -392,6 +392,17 @@ function App() {
           appealId={chatAppealId}
           operatorId={operatorId}
           onClose={() => setChatAppealId(null)}
+          onComplete={() => {
+            // Reload appeals to update status
+            fetch(`${config.apiUrl}/api/appeals`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  const list = (data.data && data.data.appeals) ? data.data.appeals : (data.appeals || []);
+                  setAppeals(list);
+                }
+              });
+          }}
         />
       )}
     </div>

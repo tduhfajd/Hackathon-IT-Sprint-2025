@@ -22,6 +22,7 @@ interface ChatWindowProps {
   appealId: string;
   operatorId: string;
   onClose: () => void;
+  onComplete?: () => void;
 }
 
 const QUICK_REPLIES = [
@@ -32,7 +33,7 @@ const QUICK_REPLIES = [
   'Хорошего дня!',
 ];
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose, onComplete }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -41,6 +42,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }
   const [aiResponse, setAiResponse] = useState<AIResponse | null>(null);
   const [aiLoading, setAiLoading] = useState(true);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [completing, setCompleting] = useState(false);
   
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -228,6 +230,36 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }
     setShowQuickReplies(false);
   };
 
+  const handleCompleteAppeal = async () => {
+    if (!window.confirm('Завершить это обращение? Оно будет перемещено в "Завершённые".')) {
+      return;
+    }
+
+    setCompleting(true);
+    try {
+      const response = await fetch(`${API_URL}/api/appeals/${appealId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'resolved' })
+      });
+
+      if (response.ok) {
+        alert('✅ Обращение завершено!');
+        if (onComplete) {
+          onComplete();
+        }
+        onClose();
+      } else {
+        alert('❌ Ошибка при завершении обращения');
+      }
+    } catch (error) {
+      console.error('Failed to complete appeal:', error);
+      alert('❌ Ошибка подключения');
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl h-5/6 flex flex-col">
@@ -237,12 +269,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose }
             <h3 className="text-lg font-bold">Чат по обращению</h3>
             <p className="text-sm opacity-90">ID: {appealId.substring(0, 8)}...</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
             <span className="text-sm">{connected ? 'Подключено' : 'Отключено'}</span>
             <button
+              onClick={handleCompleteAppeal}
+              disabled={completing}
+              className="ml-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold disabled:bg-gray-400 transition"
+            >
+              {completing ? 'Завершаю...' : '✓ Завершить'}
+            </button>
+            <button
               onClick={onClose}
-              className="ml-4 text-white hover:text-gray-200 text-2xl font-bold"
+              className="ml-2 text-white hover:text-gray-200 text-2xl font-bold"
             >
               ×
             </button>
