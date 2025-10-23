@@ -35,28 +35,47 @@ def generate_response(appeal_id: str, subject: str, description: str):
     if articles:
         # Есть статьи в KB
         article = articles[0]
+        # Берем первые 800 символов для ответа
+        content_preview = article['content'][:800]
+        # Обрезаем по последнему предложению
+        last_period = content_preview.rfind('.')
+        if last_period > 200:
+            content_preview = content_preview[:last_period + 1]
+        
         suggested_text = f"""Здравствуйте!
 
-По вашему обращению относительно "{subject}" могу предоставить следующую информацию:
+По вашему обращению относительно "{subject}" предоставляю информацию из базы знаний:
 
-{article['content'][:500]}
+{content_preview}
 
-Если у вас остались вопросы, пожалуйста, уточните.
+Если у вас остались вопросы или нужна дополнительная информация, пожалуйста, уточните.
 
 С уважением,
 Служба поддержки"""
-        confidence = 0.8
+        confidence = 0.85
         sources = [article['title']]
+        print(f"✅ Найдена статья в БЗ: {article['title']}")
     else:
-        # Нет статей - общий ответ
-        suggested_text = f"""Здравствуйте!
+        # ⚠️ Нет статей - важное уведомление для оператора
+        suggested_text = f"""⚠️ ВНИМАНИЕ: В базе знаний не найдена информация по теме "{subject}"
 
-Спасибо за ваше обращение. Я передал вашу информацию в профильный отдел. Специалист свяжется с вами в ближайшее время для решения вопроса.
+Здравствуйте!
+
+Благодарю за ваше обращение. К сожалению, по данному вопросу в базе знаний отсутствует готовая информация. 
+
+Я передал ваше обращение специалисту профильного отдела. Он свяжется с вами в ближайшее время для детального рассмотрения вопроса и предоставления актуальной информации.
+
+Пожалуйста, ожидайте звонка или письма от специалиста.
 
 С уважением,
-Служба поддержки"""
-        confidence = 0.5
+Служба поддержки
+
+---
+⚠️ ОПЕРАТОРУ: Рекомендуется добавить информацию по этой теме в базу знаний."""
+        confidence = 0.3  # Низкая уверенность при отсутствии статей
         sources = []
+        print(f"⚠️ Статьи НЕ НАЙДЕНЫ для категории '{subject}'")
+        print(f"⚠️ Оператор должен обработать вручную или добавить в БЗ")
     
     # 3. Сохранить предложенный ответ
     save_response(appeal_id, suggested_text, confidence, sources)
@@ -71,23 +90,38 @@ def generate_response(appeal_id: str, subject: str, description: str):
 
 
 def search_knowledge_base(category: str, text: str) -> list:
-    """Ищет релевантные статьи в базе знаний"""
+    """Ищет релевантные статьи в базе знаний с улучшенным поиском"""
     conn = psycopg2.connect(**DB_CONFIG)
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            # Поиск по категории и тексту
+            # Извлекаем ключевые слова из текста (первые 3-5 значимых слов)
+            words = [w.strip('.,!?;:').lower() for w in text.split() if len(w) > 3][:5]
+            
+            # Поиск по категории (приоритет 1)
             cur.execute("""
-                SELECT kb.id, kb.title, kb.content, c.name as category_name
+                SELECT kb.id, kb.title, kb.content, c.name as category_name, 1 as relevance
                 FROM knowledge_base kb
                 LEFT JOIN categories c ON kb.category_id = c.id
-                WHERE kb.is_active = true 
-                AND (c.name ILIKE %s OR kb.title ILIKE %s OR kb.content ILIKE %s)
-                ORDER BY 
-                    CASE WHEN c.name ILIKE %s THEN 1 ELSE 2 END,
-                    kb.created_at DESC
-                LIMIT 3
-            """, (f'%{category}%', f'%{text.split()[0]}%', f'%{text.split()[0]}%', f'%{category}%'))
-            return cur.fetchall()
+                WHERE kb.is_active = true AND c.name ILIKE %s
+                LIMIT 2
+            """, (f'%{category}%',))
+            results = list(cur.fetchall())
+            
+            # Если не нашли по категории, ищем по ключевым словам
+            if not results and words:
+                search_pattern = ' | '.join(words)  # PostgreSQL full-text search
+                cur.execute("""
+                    SELECT kb.id, kb.title, kb.content, c.name as category_name, 2 as relevance
+                    FROM knowledge_base kb
+                    LEFT JOIN categories c ON kb.category_id = c.id
+                    WHERE kb.is_active = true 
+                    AND (kb.title ILIKE %s OR kb.content ILIKE %s OR %s = ANY(kb.tags))
+                    ORDER BY kb.created_at DESC
+                    LIMIT 2
+                """, (f'%{words[0]}%', f'%{words[0]}%', words[0]))
+                results = list(cur.fetchall())
+            
+            return results
     finally:
         conn.close()
 
