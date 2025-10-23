@@ -334,22 +334,45 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose, 
 
         {/* AI Suggested Response */}
         {aiResponse && (
-          <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-t border-purple-200">
+          <div className={`p-4 border-t ${
+            aiResponse.confidence < 0.5 
+              ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200' 
+              : 'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200'
+          }`}>
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-purple-600 font-semibold text-sm">🤖 AI предлагает:</span>
-                <span className="text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">
+                <span className={`font-semibold text-sm ${
+                  aiResponse.confidence < 0.5 ? 'text-orange-600' : 'text-purple-600'
+                }`}>
+                  {aiResponse.confidence < 0.5 ? '⚠️ AI (требуется уточнение):' : '🤖 AI предлагает:'}
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  aiResponse.confidence < 0.5 
+                    ? 'bg-orange-200 text-orange-800' 
+                    : 'bg-purple-200 text-purple-800'
+                }`}>
                   Уверенность: {Math.round(aiResponse.confidence * 100)}%
                 </span>
               </div>
               <button
                 onClick={handleUseAIResponse}
-                className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded transition"
+                className={`text-xs text-white px-3 py-1 rounded transition ${
+                  aiResponse.confidence < 0.5
+                    ? 'bg-orange-500 hover:bg-orange-600'
+                    : 'bg-purple-600 hover:bg-purple-700'
+                }`}
               >
                 Использовать ответ
               </button>
             </div>
-            <p className="text-sm text-gray-700 bg-white p-3 rounded border border-purple-200 whitespace-pre-wrap">
+            {aiResponse.confidence < 0.5 && (
+              <div className="mb-2 p-2 bg-orange-100 border border-orange-300 rounded text-xs text-orange-800">
+                <strong>⚠️ ВНИМАНИЕ:</strong> В базе знаний нет информации по этой теме. Рекомендуется уточнить информацию вручную или добавить статью в базу знаний.
+              </div>
+            )}
+            <p className={`text-sm text-gray-700 bg-white p-3 rounded whitespace-pre-wrap ${
+              aiResponse.confidence < 0.5 ? 'border border-orange-200' : 'border border-purple-200'
+            }`}>
               {aiResponse.suggested_text}
             </p>
           </div>
