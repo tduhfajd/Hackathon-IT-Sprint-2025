@@ -24,7 +24,7 @@ app = Celery(
     'smart_assistant_workers',
     broker=BROKER_URL,
     backend=f'db+postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}',
-    include=['tasks.analyze_appeal', 'tasks.generate_response']
+    include=['tasks.analyze_appeal', 'tasks.generate_response', 'tasks.contextual_response']
 )
 
 # Configuration

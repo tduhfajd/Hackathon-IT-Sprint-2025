@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { pool } from '../config/database';
 import { logger } from '../utils/logger';
+import { rabbitMQService } from './RabbitMQService';
 
 interface ChatMessage {
   id: string;
@@ -103,6 +104,16 @@ export class ChatService {
           // Broadcast to all users in the appeal room
           this.io.to(`appeal_${appealId}`).emit('new_message', savedMessage);
           logger.info('ChatService: Message sent', { appealId, senderId, senderType });
+          
+          // If citizen sent a message, generate contextual AI response
+          if (senderType === 'citizen') {
+            try {
+              await rabbitMQService.enqueueContextualResponse(appealId);
+              logger.info('ChatService: Enqueued contextual AI response', { appealId });
+            } catch (aiError: any) {
+              logger.warn('ChatService: Failed to enqueue contextual AI', { appealId, error: aiError.message });
+            }
+          }
         } catch (error: any) {
           // Fallback: broadcast ephemeral message (not persisted) to keep dialog working
           const ephemeral = {

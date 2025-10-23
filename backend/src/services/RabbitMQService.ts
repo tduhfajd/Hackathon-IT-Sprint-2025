@@ -95,6 +95,18 @@ export class RabbitMQService {
     );
   }
 
+  /**
+   * Enqueue contextual response generation (for follow-up messages)
+   */
+  async enqueueContextualResponse(appealId: string): Promise<string> {
+    return this.sendTask(
+      'tasks.contextual_response',
+      [appealId],
+      {},
+      {}
+    );
+  }
+
   private generateUUID(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
       const r = (Math.random() * 16) | 0;
