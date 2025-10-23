@@ -29,7 +29,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   // removed unused selectedAppeal state
   const [chatAppealId, setChatAppealId] = useState<string | null>(null);
-  const [operatorId] = useState('operator-demo-1'); // В реальном приложении - из auth
+  // Demo operator ID (in production - from auth context)
+  const [operatorId] = useState('00000000-0000-0000-0000-000000000001');
   const [activeTab, setActiveTab] = useState<StatusTab>('new');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
