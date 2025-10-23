@@ -53,8 +53,8 @@ export const updateAppealValidators = [
   
   body('status')
     .optional()
-    .isIn(['new', 'processing', 'completed', 'rejected'])
-    .withMessage('Status must be one of: new, processing, completed, rejected'),
+    .isIn(['new', 'processing', 'completed', 'rejected', 'in_progress', 'resolved'])
+    .withMessage('Status must be one of: new, processing, completed, rejected, in_progress, resolved'),
   
   body('address')
     .optional()
@@ -78,8 +78,8 @@ export const trackingNumberValidator = [
 export const appealQueryValidators = [
   query('status')
     .optional()
-    .isIn(['new', 'processing', 'completed', 'rejected'])
-    .withMessage('Status must be one of: new, processing, completed, rejected'),
+    .isIn(['new', 'processing', 'completed', 'rejected', 'in_progress', 'resolved'])
+    .withMessage('Status must be one of: new, processing, completed, rejected, in_progress, resolved'),
   
   query('priority')
     .optional()
