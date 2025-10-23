@@ -121,8 +121,8 @@ router.post('/', async (req: Request, res: Response) => {
     
     const result = await pool.query(query, [
       title,
-      category_id || null,
       content,
+      category_id || null,
       tags || [],
       is_active !== undefined ? is_active : true
     ]);
