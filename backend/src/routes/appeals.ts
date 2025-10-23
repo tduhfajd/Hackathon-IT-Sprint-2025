@@ -65,6 +65,7 @@ router.get('/', appealQueryValidators, appealController.getAppeals);
 router.get('/stats', appealController.getAppealStats);
 router.get('/:id', appealIdValidator, appealController.getAppealById);
 router.put('/:id', appealIdValidator, updateAppealValidators, appealController.updateAppeal);
+router.patch('/:id', appealIdValidator, updateAppealValidators, appealController.updateAppeal);
 router.delete('/:id', appealIdValidator, appealController.deleteAppeal);
 
 // AI Response endpoint (public for operators)
