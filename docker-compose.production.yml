@@ -182,6 +182,63 @@ services:
       - db
     command: celery -A celery_app worker --loglevel=info --concurrency=2
 
+  # User Frontend
+  user-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - FRONTEND_DIR=user
+        - VITE_API_URL=https://api-smartsupport.vadimevgrafov.ru
+        - VITE_WS_URL=wss://api-smartsupport.vadimevgrafov.ru
+    container_name: smart-support-user-frontend
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=user-smartsupport.vadimevgrafov.ru
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=user-smartsupport.vadimevgrafov.ru
+      - LETSENCRYPT_EMAIL=admin@vadimevgrafov.ru
+    networks:
+      - nginx-net
+
+  # Operator Frontend
+  operator-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - FRONTEND_DIR=operator
+        - VITE_API_URL=https://api-smartsupport.vadimevgrafov.ru
+        - VITE_WS_URL=wss://api-smartsupport.vadimevgrafov.ru
+    container_name: smart-support-operator-frontend
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=operator-smartsupport.vadimevgrafov.ru
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=operator-smartsupport.vadimevgrafov.ru
+      - LETSENCRYPT_EMAIL=admin@vadimevgrafov.ru
+    networks:
+      - nginx-net
+
+  # Admin Frontend
+  admin-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - FRONTEND_DIR=admin
+        - VITE_API_URL=https://api-smartsupport.vadimevgrafov.ru
+        - VITE_WS_URL=wss://api-smartsupport.vadimevgrafov.ru
+    container_name: smart-support-admin-frontend
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=admin-smartsupport.vadimevgrafov.ru
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=admin-smartsupport.vadimevgrafov.ru
+      - LETSENCRYPT_EMAIL=admin@vadimevgrafov.ru
+    networks:
+      - nginx-net
+
   # Documentation & Files Server
   docs:
     image: nginx:alpine
