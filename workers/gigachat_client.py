@@ -51,26 +51,32 @@ class GigaChatClient:
         headers = {
             'Authorization': f'Basic {self.config["authKey"]}',
             'RqUID': f'{int(time.time() * 1000)}',
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
         }
         
-        data = {
-            'scope': self.config['scope']
-        }
+        data = f'scope={self.config["scope"]}'  # URL-encoded строка
         
         try:
+            import ssl
+            import urllib3
+            # Отключаем предупреждения SSL
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
             response = requests.post(
                 auth_url,
                 headers=headers,
                 data=data,
-                verify=False,  # GigaChat использует самоподписанные сертификаты
+                verify=False,  # Отключаем проверку SSL для GigaChat
                 timeout=30
             )
             
             # Логируем детали для отладки
             if response.status_code != 200:
-                print(f"❌ GigaChat Auth failed: {response.status_code}")
-                print(f"   Response: {response.text[:200]}")
+                import warnings
+                warnings.warn(f"❌ GigaChat Auth failed: {response.status_code}")
+                warnings.warn(f"   Response: {response.text[:500]}")
+                warnings.warn(f"   Headers sent: Authorization=Basic {self.config['authKey'][:20]}...")
             
             response.raise_for_status()
             
@@ -157,11 +163,14 @@ class GigaChatClient:
                 'top_p': 0.9
             }
             
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
             response = requests.post(
                 self.config['apiEndpoint'],
                 headers=headers,
                 json=payload,
-                verify=False,
+                verify=False,  # Отключаем проверку SSL для GigaChat
                 timeout=60
             )
             response.raise_for_status()
