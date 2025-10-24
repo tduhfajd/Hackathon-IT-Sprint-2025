@@ -47,6 +47,27 @@ services:
       retries: 3
       start_period: 40s
 
+  # Landing Page
+  landing:
+    build:
+      context: ./landing
+      dockerfile: Dockerfile
+    container_name: smart-support-landing
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=smartsupport.vadimevgrafov.ru
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=smartsupport.vadimevgrafov.ru
+      - LETSENCRYPT_EMAIL=admin@vadimevgrafov.ru
+    networks:
+      - nginx-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
   # Frontend - User Interface
   frontend-user:
     build:

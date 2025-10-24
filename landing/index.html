@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSupport - Интеллектуальный помощник по работе с обращениями</title>
+    <meta name="description" content="Проект SmartSupport - интеллектуальная система обработки обращений граждан с использованием ИИ. Разработано командой КИТВ для ИТ-Спринт 2025.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .tech-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .tech-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .section-divider {
+            background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+            height: 1px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-4 shadow-lg">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="text-3xl">🤖</div>
+                    <div>
+                        <h1 class="text-2xl font-bold">SmartSupport</h1>
+                        <p class="text-sm opacity-90">Интеллектуальный помощник</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#about" class="hover:text-blue-200 transition-colors">О проекте</a>
+                    <a href="#features" class="hover:text-blue-200 transition-colors">Возможности</a>
+                    <a href="#tech" class="hover:text-blue-200 transition-colors">Технологии</a>
+                    <a href="#future" class="hover:text-blue-200 transition-colors">Будущее</a>
+                    <a href="#demo" class="hover:text-blue-200 transition-colors">Демо</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 animate-float">
+                    SmartSupport
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 opacity-90">
+                    Интеллектуальный помощник по работе с обращениями граждан
+                </p>
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-6 mb-8">
+                    <p class="text-lg mb-4">
+                        Разработано командой <strong>"Имени товарища Вертера" (КИТВ)</strong>
+                    </p>
+                    <p class="text-base opacity-90">
+                        От Школы 21 для участия в кейс-чемпионате Белгородской области 
+                        в сфере информационных технологий <strong>(ИТ-Спринт 2025)</strong>
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#demo" class="bg-white text-gray-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-play mr-2"></i>Попробовать демо
+                    </a>
+                    <a href="#about" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-gray-800 transition-colors">
+                        <i class="fas fa-info-circle mr-2"></i>Узнать больше
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-8 gradient-text">О проекте</h2>
+                <div class="prose prose-lg mx-auto">
+                    <p class="text-gray-600 text-xl leading-relaxed mb-8">
+                        SmartSupport — это инновационная система обработки обращений граждан, 
+                        использующая возможности искусственного интеллекта для автоматизации 
+                        и оптимизации процессов работы с обращениями.
+                    </p>
+                    <div class="bg-blue-50 rounded-lg p-8 mb-8">
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-bullseye mr-3 text-blue-600"></i>
+                            Цель проекта
+                        </h3>
+                        <p class="text-gray-700">
+                            Создать эффективную систему, которая автоматически анализирует обращения, 
+                            находит релевантную информацию в базе знаний и предоставляет операторам 
+                            готовые варианты ответов, значительно ускоряя процесс обработки запросов граждан.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Возможности системы</h2>
+                <p class="text-xl text-gray-600">Что умеет SmartSupport</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white rounded-lg p-8 shadow-lg card-hover">
+                    <div class="text-4xl mb-4">👤</div>
+                    <h3 class="text-xl font-semibold mb-4">Интерфейс для граждан</h3>
+                    <p class="text-gray-600 mb-4">
+                        Простая и удобная форма для подачи обращений с автоматической категоризацией
+                    </p>
+                    <a href="https://user-smartsupport.vadimevgrafov.ru" target="_blank" 
+                       class="text-blue-600 hover:text-blue-800 font-medium">
+                        <i class="fas fa-external-link-alt mr-2"></i>Попробовать
+                    </a>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-white rounded-lg p-8 shadow-lg card-hover">
+                    <div class="text-4xl mb-4">🧠</div>
+                    <h3 class="text-xl font-semibold mb-4">ИИ-анализ обращений</h3>
+                    <p class="text-gray-600 mb-4">
+                        Автоматическое определение приоритета, тональности и категории обращений
+                    </p>
+                    <div class="text-sm text-gray-500">
+                        <i class="fas fa-check-circle mr-2 text-green-500"></i>
+                        GigaChat API
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-white rounded-lg p-8 shadow-lg card-hover">
+                    <div class="text-4xl mb-4">💬</div>
+                    <h3 class="text-xl font-semibold mb-4">Чат в реальном времени</h3>
+                    <p class="text-gray-600 mb-4">
+                        Интерактивное общение между гражданами и операторами с поддержкой WebSocket
+                    </p>
+                    <div class="text-sm text-gray-500">
+                        <i class="fas fa-bolt mr-2 text-yellow-500"></i>
+                        Мгновенные сообщения
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-white rounded-lg p-8 shadow-lg card-hover">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h3 class="text-xl font-semibold mb-4">Панель оператора</h3>
+                    <p class="text-gray-600 mb-4">
+                        Удобный интерфейс для управления обращениями с ИИ-подсказками
+                    </p>
+                    <a href="https://operator-smartsupport.vadimevgrafov.ru" target="_blank" 
+                       class="text-blue-600 hover:text-blue-800 font-medium">
+                        <i class="fas fa-external-link-alt mr-2"></i>Открыть панель
+                    </a>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="bg-white rounded-lg p-8 shadow-lg card-hover">
+                    <div class="text-4xl mb-4">📚</div>
+                    <h3 class="text-xl font-semibold mb-4">База знаний</h3>
+                    <p class="text-gray-600 mb-4">
+                        Административная панель для управления справочной информацией
+                    </p>
+                    <a href="https://admin-smartsupport.vadimevgrafov.ru" target="_blank" 
+                       class="text-blue-600 hover:text-blue-800 font-medium">
+                        <i class="fas fa-external-link-alt mr-2"></i>Управление БЗ
+                    </a>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="bg-white rounded-lg p-8 shadow-lg card-hover">
+                    <div class="text-4xl mb-4">🔍</div>
+                    <h3 class="text-xl font-semibold mb-4">Умный поиск</h3>
+                    <p class="text-gray-600 mb-4">
+                        Интеллектуальный поиск по базе знаний с ранжированием релевантности
+                    </p>
+                    <div class="text-sm text-gray-500">
+                        <i class="fas fa-search mr-2 text-blue-500"></i>
+                        Кросс-категорийный поиск
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section id="tech" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Технологический стек</h2>
+                <p class="text-xl text-gray-600">Современные технологии для максимальной эффективности</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Frontend -->
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">Frontend</h3>
+                    <div class="space-y-4">
+                        <div class="tech-icon">
+                            <i class="fab fa-react text-4xl text-blue-500"></i>
+                            <p class="text-sm text-gray-600 mt-2">React 18</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fab fa-css3-alt text-4xl text-blue-600"></i>
+                            <p class="text-sm text-gray-600 mt-2">Tailwind CSS</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fas fa-bolt text-4xl text-yellow-500"></i>
+                            <p class="text-sm text-gray-600 mt-2">Vite</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backend -->
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">Backend</h3>
+                    <div class="space-y-4">
+                        <div class="tech-icon">
+                            <i class="fab fa-node-js text-4xl text-green-500"></i>
+                            <p class="text-sm text-gray-600 mt-2">Node.js + Express</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fas fa-database text-4xl text-blue-700"></i>
+                            <p class="text-sm text-gray-600 mt-2">PostgreSQL</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fas fa-memory text-4xl text-red-500"></i>
+                            <p class="text-sm text-gray-600 mt-2">Redis</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI & Queue -->
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">AI & Очереди</h3>
+                    <div class="space-y-4">
+                        <div class="tech-icon">
+                            <i class="fas fa-robot text-4xl text-purple-500"></i>
+                            <p class="text-sm text-gray-600 mt-2">GigaChat API</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fab fa-python text-4xl text-yellow-600"></i>
+                            <p class="text-sm text-gray-600 mt-2">Celery</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fas fa-rabbit text-4xl text-orange-500"></i>
+                            <p class="text-sm text-gray-600 mt-2">RabbitMQ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DevOps -->
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">DevOps</h3>
+                    <div class="space-y-4">
+                        <div class="tech-icon">
+                            <i class="fab fa-docker text-4xl text-blue-600"></i>
+                            <p class="text-sm text-gray-600 mt-2">Docker</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fas fa-server text-4xl text-gray-600"></i>
+                            <p class="text-sm text-gray-600 mt-2">Nginx</p>
+                        </div>
+                        <div class="tech-icon">
+                            <i class="fas fa-lock text-4xl text-green-600"></i>
+                            <p class="text-sm text-gray-600 mt-2">HTTPS (Let's Encrypt)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MVP Notice -->
+            <div class="mt-16 bg-yellow-50 border border-yellow-200 rounded-lg p-8">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-info-circle text-2xl text-yellow-600 mr-3"></i>
+                    <h3 class="text-xl font-semibold text-yellow-800">Текущая версия - MVP</h3>
+                </div>
+                <p class="text-gray-700 mb-4">
+                    Реализован минимальный функционал для демонстрации основных возможностей системы. 
+                    Тестовая база знаний содержит ограниченный набор статей для демонстрации работы 
+                    интеллектуального поиска и генерации ответов.
+                </p>
+                <div class="bg-white rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Особенности реализации базы знаний:</h4>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• Хранение статей в PostgreSQL с полным текстовым поиском</li>
+                        <li>• Ранжирование релевантности по ключевым словам и категориям</li>
+                        <li>• Кросс-категорийный поиск по всем статьям независимо от темы обращения</li>
+                        <li>• Извлечение релевантных секций для генерации персонализированных ответов</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Future Vision -->
+    <section id="future" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold mb-4 gradient-text">Видение будущего</h2>
+                    <p class="text-xl text-gray-=F600">Развитие проекта в перспективе</p>
+                </div>
+
+                <div class="space-y-12">
+                    <!-- Multi-Agent System -->
+                    <div class="bg-white rounded-lg p-8 shadow-lg">
+                        <div class="flex items-center mb-6">
+                            <i class="fas fa-network-wired text-3xl text-blue-600 mr-4"></i>
+                            <h3 class="text-2xl font-semibold">Мультиагентная система</h3>
+                        </div>
+                        <p class="text-gray-700 text-lg leading-relaxed">
+                            Команда видит проект как мультиагентную систему, которая работает максимально 
+                            автоматизированно и функционирует без участия оператора, эскалируя запросы 
+                            только при отсутствии необходимой информации в базе знаний.
+                        </p>
+                    </div>
+
+                    <!-- Vector Database -->
+                    <div class="bg-white rounded-lg p-8 shadow-lg">
+                        <div class="flex items-center mb-6">
+                            <i class="fas fa-vector-square text-3xl text-purple-600 mr-4"></i>
+                            <h3 class="text-2xl font-semibold">Векторное представление знаний</h3>
+                        </div>
+                        <p class="text-gray-700 text-lg leading-relaxed">
+                            В будущем планируется представление базы знаний в векторном виде с гибридным 
+                            поиском по ней. Это позволит значительно улучшить качество поиска релевантной 
+                            информации и повысить точность генерации ответов.
+                        </p>
+                    </div>
+
+                    <!-- Analytics -->
+                    <div class="bg-white rounded-lg p-8 shadow-lg">
+                        <div class="flex items-center mb-6">
+                            <i class="fas fa-chart-line text-3xl text-green-600 mr-4"></i>
+                            <h3 class="text-2xl font-semibold">Аналитика и автоматизация</h3>
+                        </div>
+                        <p class="text-gray-700 text-lg leading-relaxed">
+                            Планируется внедрение аналитики для пополнения и актуализации базы знаний 
+                            и еще большей автоматизации системы для обработки обращений. Система будет 
+                            обучаться на основе обработанных обращений и автоматически улучшать свои ответы.
+                        </p>
+                    </div>
+
+                    <!-- Commercial Applications -->
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white">
+                        <div class="flex items-center mb-6">
+                            <i class="fas fa-briefcase text-3xl mr-4"></i>
+                            <h3 class="text-2xl font-semibold">Коммерческое применение</h3>
+                        </div>
+                        <p class="text-lg leading-relaxed mb-6">
+                            Полностью реализованная система может иметь широкое коммерческое применение.
+                        </p>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3">Основные клиенты:</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-center">
+                                        <i class="fas fa-building mr-3"></i>
+                                        Управляющие компании
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-tools mr-3"></i>
+                                        Коммунальные службы
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-store mr-3"></i>
+                                        Торговые центры
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-truck mr-3"></i>
+                                        Предприятия мелкооптовой торговли
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3">Преимущества:</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-center">
+                                        <i class="fas fa-clock mr-3"></i>
+                                        24/7 доступность
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-users mr-3"></i>
+                                        Масштабируемость
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-chart-line mr-3"></i>
+                                        Аналитика обращений
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-robot mr-3"></i>
+                                        Автоматизация процессов
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Попробовать демо</h2>
+                <p class="text-xl text-gray-600">Интерактивные интерфейсы системы</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- User Interface -->
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-8 text-white text-center">
+                    <i class="fas fa-user text-4xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-4">Интерфейс для граждан</h3>
+                    <p class="mb-6 opacity-90">
+                        Подайте обращение и получите мгновенную помощь
+                    </p>
+                    <a href="https://user-smartsupport.vadimevgrafov.ru" target="_blank" 
+                       class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
+                        <i class="fas fa-external-link-alt mr-2"></i>Попробовать
+                    </a>
+                </div>
+
+                <!-- Operator Interface -->
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-8 text-white text-center">
+                    <i class="fas fa-headset text-4xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-4">Панель оператора</h3>
+                    <p class="mb-6 opacity-90">
+                        Управляйте обращениями с помощью ИИ-подсказок
+                    </p>
+                    <a href="https://operator-smartsupport.vadimevgrafov.ru" target="_blank" 
+                       class="bg-white text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
+                        <i class="fas fa-external-link-alt mr-2"></i>Открыть
+                    </a>
+                </div>
+
+                <!-- Admin Interface -->
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-8 text-white text-center">
+                    <i class="fas fa-cog text-4xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-4">Административная панель</h3>
+                    <p class="mb-6 opacity-90">
+                        Управляйте базой знаний и настройками системы
+                    </p>
+                    <a href="https://admin-smartsupport.vadimevgrafov.ru" target="_blank" 
+                       class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
+                        <i class="fas fa-external-link-alt mr-2"></i>Управление
+                    </a>
+                </div>
+            </div>
+
+            <!-- Demo Credentials -->
+            <div class="mt-12 bg-gray-100 rounded-lg p-8">
+                <h3 class="text-xl font-semibold mb-4 text-center">
+                    <i class="fas fa-key mr-2"></i>
+                    Демо-доступ
+                </h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Оператор:</h4>
+                        <p class="text-gray-600">Логин: <code class="bg-white px-2 py-1 rounded">operator@demo.ru</code></p>
+                        <p class="text-gray-600">Пароль: <code class="bg-white px-2 py-1 rounded">demo123</code></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Администратор:</h4>
+                        <p class="text-gray-600">Логин: <code class="bg-white px-2 py-1 rounded">admin@demo.ru</code></p>
+                        <p class="text-gray-600">Пароль: <code class="bg-white px-2 py-1 rounded">admin123</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="text-3xl">🤖</div>
+                        <div>
+                            <h3 class="text-xl font-bold">SmartSupport</h3>
+                            <p class="text-sm opacity-90">Интеллектуальный помощник</p>
+                        </div>
+                    </div>
+                    <p class="text-sm opacity-90">
+                        Проект разработан командой "Имени товарища Вертера" (КИТВ) 
+                        от Школы 21 для ИТ-Спринт 2025.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Интерфейсы</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="https://user-smartsupport.vadimevgrafov.ru" target="_blank" class="hover:text-blue-200 transition-colors">Для граждан</a></li>
+                        <li><a href="https://operator-smartsupport.vadimevgrafov.ru" target="_blank" class="hover:text-blue-200 transition-colors">Панель оператора</a></li>
+                        <li><a href="https://admin-smartsupport.vadimevgrafov.ru" target="_blank" class="hover:text-blue-200 transition-colors">Админ панель</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Команда</h4>
+                    <p class="text-sm opacity-90">
+                        "Имени товарища Вертера" (КИТВ)
+                    </p>
+                    <p class="text-sm opacity-90 mt-2">
+                        Школа 21<br>
+                        ИТ-Спринт 2025
+                    </p>
+                </div>
+            </div>
+            
+            <div class="section-divider my-8"></div>
+            
+            <div class="text-center text-sm opacity-90">
+                <p>&copy; 2025 SmartSupport. Все права защищены.</p>
+                <p class="mt-2">Проект создан в рамках кейс-чемпионата Белгородской области в сфере информационных технологий</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Smooth scrolling script -->
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to header
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.classList.add('backdrop-blur-sm', 'bg-opacity-90');
+            } else {
+                header.classList.remove('backdrop-blur-sm', 'bg-opacity-90');
+            }
+        });
+
+        // Add intersection observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards and sections
+        document.querySelectorAll('.card-hover, section').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
