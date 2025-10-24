@@ -1,12 +1,13 @@
 """
 Celery Task: Generate AI Response
-Генерирует вариант ответа на основе базы знаний
+Генерирует вариант ответа на основе базы знаний используя GigaChat
 """
 import os
 import re
 from celery_app import app
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from gigachat_client import get_gigachat_client
 
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'db'),
@@ -20,7 +21,7 @@ DB_CONFIG = {
 @app.task(name='tasks.generate_response')
 def generate_response(appeal_id: str, subject: str, description: str):
     """
-    Генерирует вариант ответа оператору
+    Генерирует вариант ответа оператору используя GigaChat
     
     Args:
         appeal_id: ID обращения
@@ -32,23 +33,41 @@ def generate_response(appeal_id: str, subject: str, description: str):
     # 1. Поиск релевантных статей в базе знаний
     articles = search_knowledge_base(subject, description)
     
-    # 2. Генерация ответа
+    # 2. Генерация ответа через GigaChat
     if articles:
-        # Есть статьи в KB - генерируем человекоподобный ответ
+        # Есть статьи в KB - используем GigaChat для генерации ответа
         article = articles[0]
         
-        # Генерируем персонализированный ответ на основе статьи
-        suggested_text = generate_human_like_response(
-            question=description,
-            category=subject,
-            knowledge_base_article=article['content'],
-            article_title=article['title']
+        print(f"✅ Найдена статья в БЗ: {article['title']}")
+        print(f"🤖 Генерирую ответ через GigaChat...")
+        
+        # Получаем GigaChat клиент
+        gigachat = get_gigachat_client()
+        
+        # Генерируем ответ через GigaChat
+        result = gigachat.generate_answer_from_article(
+            question=f"{subject}. {description}",
+            article_content=article['content'],
+            article_title=article['title'],
+            max_tokens=512
         )
         
-        confidence = 0.85
-        sources = [article['title']]
-        print(f"✅ Найдена статья в БЗ: {article['title']}")
-        print(f"✅ Сгенерирован персонализированный ответ")
+        if result['success']:
+            suggested_text = result['answer']
+            confidence = result['confidence']
+            sources = [article['title']]
+            print(f"✅ GigaChat сгенерировал ответ (confidence: {confidence:.2f})")
+            print(f"   Токенов использовано: {result.get('tokens_used', 0)}")
+        else:
+            # Fallback: если GigaChat недоступен, используем простую генерацию
+            print(f"⚠️ GigaChat error: {result.get('error')}")
+            print(f"⚠️ Использую fallback генерацию")
+            suggested_text = generate_simple_fallback_response(
+                article_content=article['content'],
+                article_title=article['title']
+            )
+            confidence = 0.6
+            sources = [article['title']]
     else:
         # ⚠️ Нет статей - краткий профессиональный ответ для гражданина
         # Оператор увидит низкий confidence и поймёт что нужна ручная обработка
@@ -69,6 +88,33 @@ def generate_response(appeal_id: str, subject: str, description: str):
         'suggested_text': suggested_text[:100],
         'confidence': confidence
     }
+
+
+def generate_simple_fallback_response(article_content: str, article_title: str) -> str:
+    """
+    Простая генерация ответа без GigaChat (fallback)
+    Берёт первые несколько абзацев статьи
+    """
+    # Убираем заголовки markdown
+    clean_content = re.sub(r'^#+\s+.+$', '', article_content, flags=re.MULTILINE)
+    
+    # Разбиваем на абзацы
+    paragraphs = [p.strip() for p in clean_content.split('\n') if p.strip() and len(p.strip()) > 30]
+    
+    # Берём первые 2-3 значимых абзаца
+    selected = []
+    total_length = 0
+    
+    for para in paragraphs[:5]:
+        if total_length + len(para) > 600:  # Максимум ~600 символов
+            break
+        selected.append(para)
+        total_length += len(para)
+    
+    if selected:
+        return '\n'.join(f'• {p}' for p in selected)
+    else:
+        return article_content[:500]
 
 
 def generate_human_like_response(question: str, category: str, knowledge_base_article: str, article_title: str) -> str:
