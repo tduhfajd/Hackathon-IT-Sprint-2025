@@ -50,18 +50,9 @@ def generate_response(appeal_id: str, subject: str, description: str):
         print(f"✅ Найдена статья в БЗ: {article['title']}")
         print(f"✅ Сгенерирован персонализированный ответ")
     else:
-        # ⚠️ Нет статей - профессиональный ответ для гражданина
+        # ⚠️ Нет статей - краткий профессиональный ответ для гражданина
         # Оператор увидит низкий confidence и поймёт что нужна ручная обработка
-        suggested_text = f"""Здравствуйте!
-
-Благодарю вас за обращение. 
-
-Для решения вашего вопроса потребуется дополнительное время. Я уточню необходимую информацию у профильного специалиста и обязательно свяжусь с вами в ближайшее время.
-
-Пожалуйста, ожидайте моего ответа.
-
-С уважением,
-Служба поддержки"""
+        suggested_text = "Благодарю за обращение. Для решения вашего вопроса потребуется дополнительное время. Я уточню информацию и свяжусь с вами."
         confidence = 0.3  # Низкая уверенность = сигнал оператору что нужна ручная обработка
         sources = []
         print(f"⚠️ Статьи НЕ НАЙДЕНЫ для категории '{subject}'")
@@ -95,10 +86,8 @@ def generate_human_like_response(question: str, category: str, knowledge_base_ar
     if relevant_sections:
         # Есть конкретная информация по вопросу
         answer_parts = []
-        answer_parts.append("Здравствуйте!")
-        answer_parts.append("")  # Одна пустая строка после приветствия
         
-        # Добавляем релевантные части БЕЗ лишних пробелов
+        # Добавляем релевантные части БЕЗ пробелов
         for i, section in enumerate(relevant_sections[:3]):  # Максимум 3 секции
             # Убираем bullet points и лишние переносы
             clean_section = re.sub(r'^\s*[-•*]\s*', '', section, flags=re.MULTILINE)
@@ -110,30 +99,19 @@ def generate_human_like_response(question: str, category: str, knowledge_base_ar
             
             answer_parts.append(f"• {formatted_section}")
         
-        answer_parts.append("")  # Одна пустая строка перед подписью
-        answer_parts.append("Если требуется более детальная информация, уточните.")
-        answer_parts.append("")
-        answer_parts.append("С уважением,")
-        answer_parts.append("Служба поддержки")
-        
         return "\n".join(answer_parts)
     else:
-        # Общий ответ со всей информацией из статьи
-        content_preview = knowledge_base_article[:1000]
+        # Общий ответ со всей информацией из статьи (без подписи для чата)
+        content_preview = knowledge_base_article[:800]
         last_period = content_preview.rfind('.')
-        if last_period > 300:
+        if last_period > 200:
             content_preview = content_preview[:last_period + 1]
         
-        return f"""Здравствуйте!
-
-Благодарю за ваше обращение по теме "{category}".
-
-{content_preview}
-
-Если вам нужна более детальная информация или возникли дополнительные вопросы, пожалуйста, уточните.
-
-С уважением,
-Служба поддержки"""
+        # Убираем markdown и лишние переносы
+        clean_content = re.sub(r'^#+\s+.+$', '', content_preview, flags=re.MULTILINE)
+        clean_content = re.sub(r'\n+', '\n', clean_content).strip()
+        
+        return clean_content
 
 
 def extract_keywords(text: str) -> list:
