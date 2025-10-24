@@ -1,8 +1,11 @@
 # 🤖 SmartSupport - Интеллектуальный помощник по работе с обращениями
 
-[![Status](https://img.shields.io/badge/status-production-green.svg)]()
-[![Tech Stack](https://img.shields.io/badge/tech-Node.js%20%7C%20React%20%7C%20PostgreSQL-blue.svg)]()
+[![Status](https://img.shields.io/badge/status-production-green.svg)](https://smartsupport.vadimevgrafov.ru)
+[![Tech Stack](https://img.shields.io/badge/tech-Node.js%20%7C%20React%20%7C%20PostgreSQL-blue.svg)](#-технологический-стек)
 [![License](https://img.shields.io/badge/license-Educational-yellow.svg)]()
+[![GitLab](https://img.shields.io/badge/GitLab-Repository-orange.svg?logo=gitlab)](https://gitlab.vadimevgrafov.ru/it-sprint/it-support)
+[![API Docs](https://img.shields.io/badge/API-Swagger-85EA2D.svg?logo=swagger)](https://api-smartsupport.vadimevgrafov.ru/api-docs)
+[![Demo](https://img.shields.io/badge/demo-online-success.svg)](https://smartsupport.vadimevgrafov.ru)
 
 > Интеллектуальная система обработки обращений граждан с использованием искусственного интеллекта для автоматизации и оптимизации процессов работы.
 

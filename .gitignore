@@ -538,3 +538,40 @@ api-docs/generated/
 
 # Git hooks (keep examples)
 !.githooks/example-*
+
+# ===========================================
+# Project Internal Documentation (не для публики)
+# ===========================================
+# Служебная документация по настройке сервера
+doc/
+it-support/doc/
+
+# Рабочие заметки и черновики
+*.draft
+*.notes
+1.md
+keis.md
+SETUP-GITIGNORE.md
+PROJECT_DIAGRAM.txt
+
+# Тестовые отчёты (можно оставить TESTING_REPORT.md)
+# TESTING_REPORT.md
+
+# Старая архитектура (если есть новая в README)
+# ARCHITECTURE.md
+
+# ===========================================
+# Служебные скрипты и временные файлы
+# ===========================================
+# Временные скрипты
+scripts/temp-*.sh
+scripts/test-*.sh
+scripts/*.backup
+
+# Deprecated код
+deprecated/
+old/
+archive/
+
+# Frontend-single (если не используется)
+frontend-single/
