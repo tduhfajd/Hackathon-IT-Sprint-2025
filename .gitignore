@@ -388,9 +388,10 @@ secrets/
 *.crt
 *.cer
 
-# GigaChat credentials (keep example)
-!gigachat-config.example.json
+# GigaChat credentials
 gigachat-config.json
+gigachat-config.*.json
+!gigachat-config.example.json
 
 # Database credentials
 database-config.json
