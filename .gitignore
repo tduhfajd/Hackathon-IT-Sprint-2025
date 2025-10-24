@@ -378,6 +378,7 @@ $RECYCLE.BIN/
 .env
 .env.*
 !.env.example
+backend/.env.example
 
 # API Keys and secrets
 secrets/
