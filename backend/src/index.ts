@@ -6,6 +6,8 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger';
 import { ChatService } from './services/ChatService';
 import { rabbitMQService } from './services/RabbitMQService';
 
@@ -61,6 +63,30 @@ app.use(compression());
 
 // Logging
 app.use(morgan('combined'));
+
+// Swagger UI - API Documentation
+// Настраиваем helmet для работы со Swagger UI
+app.use('/api-docs', (req, res, next) => {
+  // Временно отключаем некоторые security headers для Swagger UI
+  res.setHeader('Content-Security-Policy', 
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://validator.swagger.io");
+  next();
+});
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'SmartSupport API Documentation',
+  customfavIcon: '/favicon.ico',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    filter: true,
+    syntaxHighlight: {
+      activate: true,
+      theme: 'monokai'
+    }
+  }
+}));
 
 // Health check endpoint
 app.get('/health', async (_req, res) => {
@@ -280,10 +306,12 @@ httpServer.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 API status: http://localhost:${PORT}/api/status`);
+  console.log(`📖 API Documentation: http://localhost:${PORT}/api-docs`);
   console.log(`💬 WebSocket: ws://localhost:${PORT}`);
   console.log(`\n📚 Available endpoints:`);
   console.log(`   - Health: http://localhost:${PORT}/health`);
   console.log(`   - Status: http://localhost:${PORT}/api/status`);
+  console.log(`   - API Docs: http://localhost:${PORT}/api-docs 🌟`);
   console.log(`   - Auth: http://localhost:${PORT}/api/auth/test`);
   console.log(`   - Appeals: http://localhost:${PORT}/api/appeals/test`);
   console.log(`   - AI: http://localhost:${PORT}/api/ai/test`);
