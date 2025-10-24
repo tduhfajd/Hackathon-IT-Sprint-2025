@@ -1,239 +1,224 @@
 """
-GigaChat Client for Celery Workers
-Генерация релевантных ответов на основе статей базы знаний
+GigaChat Client using official library
+Использует официальную библиотеку gigachat для работы с API
 """
 import os
-import json
-import requests
-import base64
-from typing import Optional, Dict, Any
+import time
+from gigachat import GigaChat
+from gigachat.models import Chat, Messages, MessagesRole
 
 
 class GigaChatClient:
     """
-    Клиент для работы с GigaChat API
-    Используется для генерации релевантных ответов
+    Клиент для работы с GigaChat API через официальную библиотеку
     """
     
     def __init__(self):
-        # Загружаем конфигурацию
-        config_path = os.getenv('GIGACHAT_CONFIG_PATH', '/app/gigachat-config.json')
+        """Инициализация клиента GigaChat"""
+        self.credentials = os.getenv('GIGACHAT_AUTH_KEY')
+        self.scope = os.getenv('GIGACHAT_SCOPE', 'GIGACHAT_API_PERS')
         
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                self.config = json.load(f)
-        else:
-            # Fallback на переменные окружения
-            self.config = {
-                'clientId': os.getenv('GIGACHAT_CLIENT_ID'),
-                'authKey': os.getenv('GIGACHAT_AUTH_KEY'),
-                'scope': os.getenv('GIGACHAT_SCOPE', 'GIGACHAT_API_PERS'),
-                'authEndpoint': 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
-                'apiEndpoint': 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions',
-                'temperature': 0.7,
-                'maxTokens': 1024
-            }
+        if not self.credentials:
+            raise ValueError("GIGACHAT_AUTH_KEY environment variable is required")
         
-        self.access_token: Optional[str] = None
-        self.token_expires_at: int = 0
+        # Создаём клиент с отключением проверки SSL (для работы с российскими сертификатами)
+        self.client = GigaChat(
+            credentials=self.credentials,
+            scope=self.scope,
+            verify_ssl_certs=False  # Отключаем проверку SSL
+        )
+        
+        print(f"✅ GigaChat client initialized (scope: {self.scope})")
     
-    def _get_access_token(self) -> str:
-        """Получает access token для GigaChat API"""
-        import time
-        
-        # Проверяем, не истёк ли токен
-        if self.access_token and time.time() < self.token_expires_at:
-            return self.access_token
-        
-        # Получаем новый токен
-        auth_url = self.config['authEndpoint']
-        
-        headers = {
-            'Authorization': f'Basic {self.config["authKey"]}',
-            'RqUID': f'{int(time.time() * 1000)}',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-        }
-        
-        data = f'scope={self.config["scope"]}'  # URL-encoded строка
-        
-        try:
-            import ssl
-            import urllib3
-            # Отключаем предупреждения SSL
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            
-            response = requests.post(
-                auth_url,
-                headers=headers,
-                data=data,
-                verify=False,  # Отключаем проверку SSL для GigaChat
-                timeout=30
-            )
-            
-            # Логируем детали для отладки
-            if response.status_code != 200:
-                import warnings
-                warnings.warn(f"❌ GigaChat Auth failed: {response.status_code}")
-                warnings.warn(f"   Response: {response.text[:500]}")
-                warnings.warn(f"   Headers sent: Authorization=Basic {self.config['authKey'][:20]}...")
-            
-            response.raise_for_status()
-            
-            token_data = response.json()
-            self.access_token = token_data['access_token']
-            # Токен действителен 30 минут, но обновим за 5 минут до истечения
-            self.token_expires_at = time.time() + (25 * 60)
-            
-            print(f"✅ GigaChat access token получен")
-            
-            return self.access_token
-            
-        except Exception as e:
-            print(f"❌ Failed to get GigaChat access token: {e}")
-            print(f"   Auth URL: {auth_url}")
-            print(f"   Scope: {self.config['scope']}")
-            raise
-    
-    def generate_answer_from_article(
-        self,
-        question: str,
-        article_content: str,
-        article_title: str,
-        max_tokens: int = 512
-    ) -> Dict[str, Any]:
+    def generate_answer_from_article(self, question: str, article_content: str, 
+                                     article_title: str, max_tokens: int = 512) -> dict:
         """
         Генерирует ответ на вопрос на основе статьи из базы знаний
         
         Args:
-            question: Вопрос гражданина
+            question: Вопрос пользователя
             article_content: Содержимое статьи
-            article_title: Заголовок статьи
-            max_tokens: Максимальная длина ответа
+            article_title: Название статьи
+            max_tokens: Максимальное количество токенов в ответе
             
         Returns:
-            Dict с ключами:
-                - success: bool
-                - answer: str (если success=True)
-                - confidence: float (0.0-1.0)
-                - error: str (если success=False)
+            dict: {
+                'success': bool,
+                'answer': str,
+                'confidence': float,
+                'tokens_used': int,
+                'error': str (если success=False)
+            }
         """
         try:
-            token = self._get_access_token()
-            
-            # Формируем промпт для GigaChat
-            system_prompt = """Ты - опытный специалист службы поддержки ЖКХ. 
-Твоя задача - дать краткий, профессиональный и понятный ответ гражданину 
-на основе информации из базы знаний.
+            # Формируем промпт
+            system_prompt = """Ты - помощник оператора службы поддержки. 
+Твоя задача - помочь оператору составить ответ гражданину на основе информации из базы знаний.
 
-ВАЖНО:
-- Используй ТОЛЬКО информацию из предоставленной статьи
-- Ответ должен быть кратким (2-4 предложения)
-- Пиши понятным языком, без сложных терминов
-- Если в статье нет ответа, так и скажи
-- НЕ добавляй приветствия и подписи
-- Отвечай по существу вопроса"""
+Правила:
+1. Используй ТОЛЬКО информацию из предоставленной статьи
+2. Отвечай кратко и по делу (2-4 предложения)
+3. Пиши профессионально, но человечно
+4. Если в статье нет точного ответа - скажи об этом"""
 
-            user_prompt = f"""Статья из базы знаний:
+            user_prompt = f"""Статья из базы знаний: "{article_title}"
 
-Заголовок: {article_title}
-
-{article_content}
-
----
+Содержание статьи:
+{article_content[:2000]}
 
 Вопрос гражданина: {question}
 
-Дай краткий ответ на основе этой статьи:"""
+Составь краткий ответ для оператора (2-4 предложения), который он может отправить гражданину."""
 
-            # Запрос к GigaChat API
-            headers = {
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json'
-            }
-            
-            payload = {
-                'model': 'GigaChat',
-                'messages': [
-                    {'role': 'system', 'content': system_prompt},
-                    {'role': 'user', 'content': user_prompt}
+            # Создаём payload для чата
+            payload = Chat(
+                messages=[
+                    Messages(
+                        role=MessagesRole.SYSTEM,
+                        content=system_prompt
+                    ),
+                    Messages(
+                        role=MessagesRole.USER,
+                        content=user_prompt
+                    )
                 ],
-                'temperature': self.config.get('temperature', 0.7),
-                'max_tokens': max_tokens,
-                'top_p': 0.9
-            }
-            
-            import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            
-            response = requests.post(
-                self.config['apiEndpoint'],
-                headers=headers,
-                json=payload,
-                verify=False,  # Отключаем проверку SSL для GigaChat
-                timeout=60
+                temperature=0.7,
+                max_tokens=max_tokens
             )
-            response.raise_for_status()
             
-            result = response.json()
+            # Отправляем запрос с retry при 429
+            max_retries = 3
+            retry_delay = 2  # секунды
             
-            if 'choices' in result and len(result['choices']) > 0:
-                answer = result['choices'][0]['message']['content'].strip()
+            for attempt in range(max_retries):
+                try:
+                    response = self.client.chat(payload)
+                    break  # Успех - выходим из цикла
+                except Exception as e:
+                    error_str = str(e)
+                    if '429' in error_str and attempt < max_retries - 1:
+                        print(f"⚠️ Rate limit hit, retrying in {retry_delay}s (attempt {attempt + 1}/{max_retries})")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                        continue
+                    else:
+                        raise  # Пробрасываем ошибку дальше
+            
+            # Извлекаем ответ
+            if response.choices and len(response.choices) > 0:
+                answer = response.choices[0].message.content
+                tokens_used = response.usage.total_tokens if hasattr(response, 'usage') else 0
                 
-                # Убираем лишние пустые строки
-                answer = '\n'.join(line for line in answer.split('\n') if line.strip())
-                
-                # Вычисляем уверенность на основе длины ответа и finish_reason
-                finish_reason = result['choices'][0].get('finish_reason', 'stop')
-                confidence = 0.9 if finish_reason == 'stop' else 0.7
-                
-                # Если ответ очень короткий или содержит "нет информации", снижаем уверенность
-                if len(answer) < 50 or 'нет информации' in answer.lower() or 'не найдено' in answer.lower():
-                    confidence = 0.5
+                # Очищаем ответ от лишних пробелов и переносов
+                answer = self._clean_response(answer)
                 
                 return {
                     'success': True,
                     'answer': answer,
-                    'confidence': confidence,
-                    'tokens_used': result.get('usage', {}).get('total_tokens', 0)
+                    'confidence': 0.9,  # Высокая уверенность при успешном ответе
+                    'tokens_used': tokens_used
                 }
             else:
                 return {
                     'success': False,
                     'error': 'No response from GigaChat',
+                    'answer': '',
                     'confidence': 0.0
                 }
                 
-        except requests.exceptions.Timeout:
-            return {
-                'success': False,
-                'error': 'GigaChat API timeout',
-                'confidence': 0.0
-            }
-        except requests.exceptions.RequestException as e:
-            return {
-                'success': False,
-                'error': f'GigaChat API error: {str(e)}',
-                'confidence': 0.0
-            }
         except Exception as e:
+            error_msg = str(e)
+            print(f"❌ GigaChat error: {error_msg}")
+            
             return {
                 'success': False,
-                'error': f'Unexpected error: {str(e)}',
+                'error': f'GigaChat API error: {error_msg}',
+                'answer': '',
                 'confidence': 0.0
             }
-
-
-# Глобальный экземпляр клиента
-_gigachat_client: Optional[GigaChatClient] = None
-
-
-def get_gigachat_client() -> GigaChatClient:
-    """Возвращает singleton экземпляр GigaChatClient"""
-    global _gigachat_client
     
-    if _gigachat_client is None:
-        _gigachat_client = GigaChatClient()
-    
-    return _gigachat_client
+    def analyze_text(self, text: str, task: str = 'sentiment') -> dict:
+        """
+        Анализирует текст (тональность, приоритет и т.д.)
+        
+        Args:
+            text: Текст для анализа
+            task: Тип анализа ('sentiment', 'priority', 'category')
+            
+        Returns:
+            dict: результаты анализа
+        """
+        try:
+            if task == 'sentiment':
+                prompt = f"""Определи тональность текста (positive/neutral/negative):
 
+Текст: {text}
+
+Ответь одним словом: positive, neutral или negative"""
+                
+            elif task == 'priority':
+                prompt = f"""Определи приоритет обращения (low/medium/high/critical):
+
+Текст: {text}
+
+Ответь одним словом: low, medium, high или critical"""
+                
+            else:
+                return {'success': False, 'error': f'Unknown task: {task}'}
+            
+            payload = Chat(
+                messages=[Messages(role=MessagesRole.USER, content=prompt)],
+                temperature=0.3,  # Низкая температура для точности
+                max_tokens=50
+            )
+            
+            response = self.client.chat(payload)
+            
+            if response.choices and len(response.choices) > 0:
+                result = response.choices[0].message.content.strip().lower()
+                
+                return {
+                    'success': True,
+                    'result': result,
+                    'confidence': 0.85
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'No response from GigaChat'
+                }
+                
+        except Exception as e:
+            print(f"❌ GigaChat analysis error: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _clean_response(self, text: str) -> str:
+        """
+        Очищает ответ от лишних пробелов и форматирования
+        
+        Args:
+            text: Исходный текст
+            
+        Returns:
+            str: Очищенный текст
+        """
+        # Убираем множественные пробелы
+        text = ' '.join(text.split())
+        
+        # Убираем лишние переносы строк (оставляем только одинарные)
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        text = ' '.join(lines)
+        
+        return text.strip()
+
+
+def get_gigachat_client():
+    """
+    Возвращает singleton instance клиента GigaChat
+    """
+    if not hasattr(get_gigachat_client, '_instance'):
+        get_gigachat_client._instance = GigaChatClient()
+    return get_gigachat_client._instance

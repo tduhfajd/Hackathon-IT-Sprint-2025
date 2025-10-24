@@ -1,12 +1,13 @@
 """
 Celery Task: Analyze Appeal
-Определяет приоритет, тональность, ключевые слова
+Определяет приоритет, тональность, ключевые слова используя GigaChat
 """
 import os
 import re
 from celery_app import app
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from gigachat_client import get_gigachat_client
 
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'db'),
@@ -20,31 +21,60 @@ DB_CONFIG = {
 @app.task(name='tasks.analyze_appeal')
 def analyze_appeal(appeal_id: str, subject: str, description: str):
     """
-    Анализирует обращение и сохраняет результаты
+    Анализирует обращение и сохраняет результаты используя GigaChat AI
     
     Args:
         appeal_id: ID обращения
         subject: Тема (категория из dropdown)
         description: Текст обращения
     """
-    print(f"🔍 Analyzing appeal {appeal_id}")
+    print(f"🔍 Analyzing appeal {appeal_id} with GigaChat AI")
     
-    text = f"{subject} {description}".lower()
+    text = f"{subject} {description}"
     
-    # 1. Определение приоритета
-    priority = detect_priority(text)
-    
-    # 2. Определение тональности
-    sentiment_type, sentiment_score = detect_sentiment(text)
-    
-    # 3. Извлечение ключевых слов
-    keywords = extract_keywords(text)
-    
-    # 4. Краткое резюме
-    summary = description[:200] + ('...' if len(description) > 200 else '')
-    
-    # 5. Уверенность AI (mock)
-    ai_confidence = 0.75
+    try:
+        # Получаем клиент GigaChat
+        gigachat = get_gigachat_client()
+        
+        # 1. Определение приоритета через GigaChat
+        priority_result = gigachat.analyze_text(text, task='priority')
+        if priority_result['success']:
+            priority = priority_result['result']
+            print(f"   🎯 Priority (AI): {priority}")
+        else:
+            # Fallback на простой анализ
+            priority = detect_priority(text.lower())
+            print(f"   ⚠️ Priority (fallback): {priority}")
+        
+        # 2. Определение тональности через GigaChat
+        sentiment_result = gigachat.analyze_text(text, task='sentiment')
+        if sentiment_result['success']:
+            sentiment_type = sentiment_result['result']
+            sentiment_score = sentiment_result.get('confidence', 0.85)
+            print(f"   😊 Sentiment (AI): {sentiment_type}")
+        else:
+            # Fallback на простой анализ
+            sentiment_type, sentiment_score = detect_sentiment(text.lower())
+            print(f"   ⚠️ Sentiment (fallback): {sentiment_type}")
+        
+        # 3. Извлечение ключевых слов (простой метод - достаточно эффективен)
+        keywords = extract_keywords(text.lower())
+        
+        # 4. Краткое резюме
+        summary = description[:200] + ('...' if len(description) > 200 else '')
+        
+        # 5. Уверенность AI
+        ai_confidence = 0.9 if (priority_result.get('success') and sentiment_result.get('success')) else 0.75
+        
+    except Exception as e:
+        # При ошибке GigaChat используем fallback
+        print(f"⚠️ GigaChat unavailable, using fallback analysis: {e}")
+        text_lower = text.lower()
+        priority = detect_priority(text_lower)
+        sentiment_type, sentiment_score = detect_sentiment(text_lower)
+        keywords = extract_keywords(text_lower)
+        summary = description[:200] + ('...' if len(description) > 200 else '')
+        ai_confidence = 0.6  # Низкая уверенность для fallback
     
     # Сохранить в БД
     save_analysis(
@@ -58,7 +88,7 @@ def analyze_appeal(appeal_id: str, subject: str, description: str):
         ai_confidence=ai_confidence
     )
     
-    print(f"✅ Analysis completed for {appeal_id}: priority={priority}, sentiment={sentiment_type}")
+    print(f"✅ Analysis completed for {appeal_id}: priority={priority}, sentiment={sentiment_type}, confidence={ai_confidence}")
     
     return {
         'appeal_id': appeal_id,
