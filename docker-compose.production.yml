@@ -199,6 +199,15 @@ services:
       - GIGACHAT_CLIENT_ID=${GIGACHAT_CLIENT_ID}
       - GIGACHAT_AUTH_KEY=${GIGACHAT_AUTH_KEY}
       - GIGACHAT_SCOPE=${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
+      # Отключаем прокси для GigaChat API
+      - NO_PROXY=*
+      - no_proxy=*
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - ALL_PROXY=
+      - all_proxy=
     networks:
       - backend-net
     depends_on:
