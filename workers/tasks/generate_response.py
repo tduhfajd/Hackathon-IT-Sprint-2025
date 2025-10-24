@@ -78,9 +78,13 @@ def generate_human_like_response(question: str, category: str, knowledge_base_ar
     """
     # Извлекаем ключевые слова из вопроса
     keywords = extract_keywords(question)
+    print(f"  🔑 Ключевые слова: {keywords}")
     
     # Находим релевантные секции в статье
     relevant_sections = find_relevant_sections(knowledge_base_article, keywords)
+    print(f"  📋 Найдено релевантных секций: {len(relevant_sections)}")
+    for i, section in enumerate(relevant_sections[:3], 1):
+        print(f"     #{i}: {section[:80]}...")
     
     # Формируем структурированный ответ
     if relevant_sections:
@@ -117,10 +121,25 @@ def generate_human_like_response(question: str, category: str, knowledge_base_ar
 def extract_keywords(text: str) -> list:
     """Извлекает ключевые слова из текста"""
     # Удаляем стоп-слова и короткие слова
-    stop_words = {'как', 'что', 'где', 'когда', 'почему', 'это', 'для', 'при', 'или', 'нужно', 'можно', 'есть'}
+    stop_words = {'как', 'что', 'где', 'когда', 'почему', 'это', 'для', 'при', 'или', 'нужно', 'можно', 'есть', 'крана', 'течет'}
     words = re.findall(r'\b\w+\b', text.lower())
-    keywords = [w for w in words if len(w) > 3 and w not in stop_words]
-    return keywords[:10]  # Первые 10 ключевых слов
+    
+    # Упрощенный стемминг: убираем распространенные окончания
+    stemmed = []
+    for w in words:
+        if len(w) > 4:
+            # Убираем окончания: -ом, -ой, -ым, -ая, -ое, -ые, -ых, -ами
+            if w.endswith(('ом', 'ой', 'ым', 'ая', 'ое', 'ые', 'ых', 'ами', 'ого', 'его')):
+                stemmed.append(w[:-2])
+            elif w.endswith(('ими', 'ыми', 'ному', 'ному')):
+                stemmed.append(w[:-3])
+            else:
+                stemmed.append(w)
+        else:
+            stemmed.append(w)
+    
+    keywords = [w for w in stemmed if len(w) > 3 and w not in stop_words]
+    return keywords[:12]  # Первые 12 ключевых слов
 
 
 def find_relevant_sections(article: str, keywords: list) -> list:
@@ -151,8 +170,18 @@ def find_relevant_sections(article: str, keywords: list) -> list:
     
     # Ищем параграфы с ключевыми словами
     for paragraph in combined_paragraphs:
-        # Подсчитываем совпадения ключевых слов
-        matches = sum(1 for keyword in keywords if keyword in paragraph.lower())
+        # Подсчитываем совпадения ключевых слов (частичные совпадения тоже считаем)
+        para_lower = paragraph.lower()
+        matches = 0
+        for keyword in keywords:
+            # Проверяем как точное вхождение, так и частичное (для однокоренных слов)
+            if keyword in para_lower:
+                matches += 2  # Полное совпадение - больший вес
+            elif len(keyword) > 4:
+                # Частичное совпадение для корня слова (первые 4-5 букв)
+                root = keyword[:min(len(keyword)-1, 5)]
+                if root in para_lower:
+                    matches += 1
         
         if matches > 0:
             # Очищаем от markdown
