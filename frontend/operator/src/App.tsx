@@ -110,8 +110,9 @@ function App() {
     if (activeTab !== 'all' && appeal.status !== activeTab) {
       return false;
     }
-    // Priority filter
-    if (priorityFilter !== 'all' && appeal.priority !== priorityFilter) {
+    // Priority filter - используем priority_suggestion (от AI) или fallback на priority
+    const actualPriority = appeal.priority_suggestion || appeal.priority;
+    if (priorityFilter !== 'all' && actualPriority !== priorityFilter) {
       return false;
     }
     // Search filter
