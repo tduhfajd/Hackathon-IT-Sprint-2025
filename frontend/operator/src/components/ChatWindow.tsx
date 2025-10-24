@@ -6,7 +6,7 @@ interface Message {
   id: string;
   appeal_id: string;
   sender_id: string;
-  sender_type: 'citizen' | 'operator';
+  sender_type: 'citizen' | 'operator' | 'system';
   message_text: string;
   created_at: string;
 }
@@ -300,22 +300,34 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose, 
           {messages.map((msg, index) => (
             <div
               key={msg.id || index}
-              className={`mb-4 flex ${msg.sender_type === 'operator' ? 'justify-end' : 'justify-start'}`}
+              className={`mb-4 flex ${
+                msg.sender_type === 'operator' 
+                  ? 'justify-end' 
+                  : msg.sender_type === 'system' 
+                  ? 'justify-center' 
+                  : 'justify-start'
+              }`}
             >
               <div
                 className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                   msg.sender_type === 'operator'
                     ? 'bg-blue-500 text-white rounded-br-none'
+                    : msg.sender_type === 'system'
+                    ? 'bg-gray-200 text-gray-700 italic text-sm'
                     : 'bg-white text-gray-800 rounded-bl-none shadow'
                 }`}
               >
-                <p className="text-sm font-semibold mb-1">
-                  {msg.sender_type === 'operator' ? 'Вы (Оператор)' : 'Гражданин'}
-                </p>
+                {msg.sender_type !== 'system' && (
+                  <p className="text-sm font-semibold mb-1">
+                    {msg.sender_type === 'operator' ? 'Вы (Оператор)' : 'Гражданин'}
+                  </p>
+                )}
                 <p className="break-words">{msg.message_text}</p>
-                <p className={`text-xs mt-1 ${msg.sender_type === 'operator' ? 'text-blue-100' : 'text-gray-500'}`}>
-                  {formatTime(msg.created_at)}
-                </p>
+                {msg.sender_type !== 'system' && (
+                  <p className={`text-xs mt-1 ${msg.sender_type === 'operator' ? 'text-blue-100' : 'text-gray-500'}`}>
+                    {formatTime(msg.created_at)}
+                  </p>
+                )}
               </div>
             </div>
           ))}
