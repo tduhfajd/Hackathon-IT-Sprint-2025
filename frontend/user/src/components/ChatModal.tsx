@@ -37,8 +37,11 @@ const ChatModal: React.FC<ChatModalProps> = ({ appealId, citizenId, onClose }) =
     socketRef.current = socket;
 
     socket.on('connect', () => {
+      console.log('✅ WebSocket connected');
       setConnected(true);
-      socket.emit('join_appeal', { appealId, userId: citizenId, userType: 'citizen' });
+      const joinData = { appealId, userId: citizenId, userType: 'citizen' };
+      console.log('📍 Joining appeal:', joinData);
+      socket.emit('join_appeal', joinData);
     });
 
     socket.on('disconnect', () => setConnected(false));
@@ -90,6 +93,8 @@ const ChatModal: React.FC<ChatModalProps> = ({ appealId, citizenId, onClose }) =
     
     const messageText = text.trim();
     
+    console.log('📤 Sending message:', { appealId, citizenId, messageText, connected });
+    
     // Оптимистичное обновление UI - сразу показываем сообщение
     const optimisticMessage: Message = {
       appeal_id: appealId,
@@ -104,12 +109,14 @@ const ChatModal: React.FC<ChatModalProps> = ({ appealId, citizenId, onClose }) =
     setText('');
     
     // Отправляем на сервер
-    socketRef.current.emit('send_message', {
+    const messageData = {
       appealId,
       senderId: citizenId,
       senderType: 'citizen',
       message: messageText
-    });
+    };
+    console.log('📡 Emitting send_message:', messageData);
+    socketRef.current.emit('send_message', messageData);
   };
 
   return (
