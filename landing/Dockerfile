@@ -4,8 +4,7 @@ FROM nginx:alpine
 # Copy landing page files
 COPY index.html /usr/share/nginx/html/
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Nginx configuration will be created inline
 
 # Create custom nginx configuration for landing page
 RUN echo 'server { \
