@@ -33,8 +33,8 @@ print_error() {
 }
 
 # Check if we're in the right directory
-if [ ! -f "docker-compose.production.yml" ]; then
-    print_error "docker-compose.production.yml not found. Please run this script from the project root."
+if [ ! -f "docker-compose.yml" ]; then
+    print_error "docker-compose.yml not found. Please run this script from the project root."
     exit 1
 fi
 
@@ -47,12 +47,12 @@ fi
 print_status "Building and deploying landing page..."
 
 # Build and deploy landing page
-docker-compose -f docker-compose.production.yml build landing
+docker-compose --env-file .env.prod build landing
 
 print_status "Starting landing page container..."
 
 # Start the landing page service
-docker-compose -f docker-compose.production.yml up -d landing
+docker-compose --env-file .env.prod up -d landing
 
 print_status "Checking container health..."
 
@@ -93,8 +93,8 @@ echo "   docker logs smart-support-landing"
 echo ""
 echo "🔄 To update the landing page:"
 echo "   1. Edit files in ./landing/"
-echo "   2. Run: docker-compose -f docker-compose.production.yml build landing"
-echo "   3. Run: docker-compose -f docker-compose.production.yml up -d landing"
+echo "   2. Run: docker-compose --env-file .env.prod build landing"
+echo "   3. Run: docker-compose --env-file .env.prod up -d landing"
 echo ""
 
 print_success "Deployment completed successfully! 🎉"
