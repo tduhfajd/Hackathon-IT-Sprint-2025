@@ -23,6 +23,7 @@ interface TypingStatus {
 export class ChatService {
   private io: Server;
   private connectedUsers: Map<string, Socket> = new Map();
+  private static instance: ChatService | null = null;
 
   constructor(httpServer: HttpServer) {
     this.io = new Server(httpServer, {
@@ -44,6 +45,13 @@ export class ChatService {
 
     this.setupEventHandlers();
     logger.info('ChatService: WebSocket server initialized');
+    
+    // Store instance for static access
+    ChatService.instance = this;
+  }
+  
+  public static getIO(): Server | null {
+    return ChatService.instance?.io || null;
   }
 
   private setupEventHandlers(): void {

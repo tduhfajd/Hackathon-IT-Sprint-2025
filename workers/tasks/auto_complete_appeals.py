@@ -17,9 +17,9 @@ from datetime import datetime, timedelta
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'smart-support-db'),
     'port': os.getenv('DB_PORT', '5432'),
-    'database': os.getenv('DB_NAME', 'smart_support'),
-    'user': os.getenv('DB_USER', 'postgres'),
-    'password': os.getenv('DB_PASSWORD', 'StrongPasswordChange2025!')
+    'database': os.getenv('POSTGRES_DB', 'smart_support'),
+    'user': os.getenv('POSTGRES_USER', 'postgres'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'StrongPasswordChange2025!')
 }
 
 

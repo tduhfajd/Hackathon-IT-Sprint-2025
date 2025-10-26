@@ -12,9 +12,9 @@ from gigachat_client import get_gigachat_client
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'db'),
     'port': os.getenv('DB_PORT', '5432'),
-    'database': os.getenv('DB_NAME', 'smart_assistant'),
-    'user': os.getenv('DB_USER', 'user'),
-    'password': os.getenv('DB_PASSWORD', 'password')
+    'database': os.getenv('POSTGRES_DB', 'smart_assistant'),
+    'user': os.getenv('POSTGRES_USER', 'user'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'password')
 }
 
 
@@ -364,13 +364,14 @@ def save_user_message_to_chat(appeal_id: str, message: str):
                         print(f"   ⚠️ System user not found, skipping chat message")
                         return
                 
-            # Сохраняем сообщение от гражданина
-            cur.execute("""
-                INSERT INTO chat_messages (appeal_id, sender_id, sender_type, message, created_at)
-                VALUES (%s, %s, 'citizen', %s, NOW())
-            """, (appeal_id, sender_id, message))
-            conn.commit()
-            print(f"   💬 Сохранено сообщение гражданина в чат (sender_id: {sender_id})")
+            # NOTE: Сообщение уже сохраняется в AppealController.createAppeal()
+            # Не нужно сохранять повторно, иначе получается дубликат
+            # cur.execute("""
+            #     INSERT INTO chat_messages (appeal_id, sender_id, sender_type, message, created_at)
+            #     VALUES (%s, %s, 'citizen', %s, NOW())
+            # """, (appeal_id, sender_id, message))
+            # conn.commit()
+            print(f"   ℹ️ Сообщение гражданина уже сохранено в AppealController (sender_id: {sender_id})")
     finally:
         conn.close()
 

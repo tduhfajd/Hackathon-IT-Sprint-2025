@@ -12,9 +12,9 @@ from gigachat_client import get_gigachat_client
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'db'),
     'port': os.getenv('DB_PORT', '5432'),
-    'database': os.getenv('DB_NAME', 'smart_assistant'),
-    'user': os.getenv('DB_USER', 'user'),
-    'password': os.getenv('DB_PASSWORD', 'password')
+    'database': os.getenv('POSTGRES_DB', 'smart_assistant'),
+    'user': os.getenv('POSTGRES_USER', 'user'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'password')
 }
 
 

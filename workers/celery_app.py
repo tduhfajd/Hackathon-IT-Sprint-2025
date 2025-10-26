@@ -15,9 +15,9 @@ BROKER_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_
 # PostgreSQL connection
 DB_HOST = os.getenv('DB_HOST', 'db')
 DB_PORT = os.getenv('DB_PORT', '5432')
-DB_NAME = os.getenv('DB_NAME', 'smart_assistant')
-DB_USER = os.getenv('DB_USER', 'user')
-DB_PASS = os.getenv('DB_PASSWORD', 'password')
+DB_NAME = os.getenv('POSTGRES_DB', 'smart_assistant')
+DB_USER = os.getenv('POSTGRES_USER', 'user')
+DB_PASS = os.getenv('POSTGRES_PASSWORD', 'password')
 
 # Create Celery app
 app = Celery(

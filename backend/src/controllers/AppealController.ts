@@ -4,6 +4,7 @@ import { AppealModel, CreateAppealData, UpdateAppealData, AppealFilters } from '
 import { logger } from '../utils/logger';
 import { validationResult } from 'express-validator';
 import { rabbitMQService } from '../services/RabbitMQService';
+import { ChatService } from '../services/ChatService';
 
 export class AppealController {
   constructor(private appealModel: AppealModel) {}
@@ -87,6 +88,15 @@ export class AppealController {
           error: queueError.message 
         });
         // Continue anyway - analysis can be run manually if needed
+      }
+      
+      // Broadcast appeal_updated event to all connected operators via ChatService
+      const io = ChatService.getIO();
+      if (io) {
+        io.emit('appeal_updated', { appealId: appeal.id, hasNewMessage: true });
+        logger.info('Broadcasted appeal_updated event for new appeal', { appealId: appeal.id });
+      } else {
+        logger.warn('Socket.IO not available, cannot broadcast appeal_updated event');
       }
       
       res.status(201).json({
