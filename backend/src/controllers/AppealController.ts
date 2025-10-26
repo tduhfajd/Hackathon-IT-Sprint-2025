@@ -59,6 +59,22 @@ export class AppealController {
         trackingNumber: appeal.tracking_number,
         userId: req.user?.userId 
       });
+
+      // Save the initial message (description) to chat_messages
+      try {
+        await pool.query(
+          `INSERT INTO chat_messages (appeal_id, sender_id, sender_type, message, created_at)
+           VALUES ($1, $2, 'citizen', $3, NOW())`,
+          [appeal.id, citizenUserId, appealData.description]
+        );
+        logger.info('Initial message saved to chat', { appealId: appeal.id });
+      } catch (chatError: any) {
+        logger.error('Failed to save initial message to chat', { 
+          appealId: appeal.id, 
+          error: chatError.message 
+        });
+        // Continue anyway - appeal is created
+      }
       
       // Enqueue AI analysis and response generation via RabbitMQ
       try {
