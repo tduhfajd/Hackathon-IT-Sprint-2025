@@ -451,22 +451,10 @@ grafana-data/
 logs/
 
 # ===========================================
-# Knowledge Base (keep structure, ignore large files)
+# Knowledge Base (removed - data now in PostgreSQL)
 # ===========================================
-# Keep knowledge base structure but ignore large binary files
-knowledge_base/**/*.pdf
-knowledge_base/**/*.doc
-knowledge_base/**/*.docx
-knowledge_base/**/*.xls
-knowledge_base/**/*.xlsx
-knowledge_base/**/*.ppt
-knowledge_base/**/*.pptx
-knowledge_base/**/*.zip
-knowledge_base/**/*.rar
-
-# Keep JSONL files but ignore backups
-knowledge_base/**/*.backup
-knowledge_base/**/*.bak
+# Old file-based knowledge base (no longer used)
+knowledge_base/
 
 # ===========================================
 # Temporary Files
