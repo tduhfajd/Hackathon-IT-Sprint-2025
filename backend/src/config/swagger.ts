@@ -17,19 +17,22 @@ const options: swaggerJsdoc.Options = {
         
         ## Возможности
         
-        - 🤖 **ИИ-анализ обращений** (приоритет, тональность, категория)
-        - 🔍 **Умный поиск** в базе знаний с ранжированием релевантности
+        - 🤖 **ИИ-анализ обращений** (приоритет, тональность)
+        - 💡 **AI-рекомендации ответов** на основе базы знаний
+        - 🔍 **Поиск в базе знаний** с ранжированием по релевантности
         - 💬 **Чат в реальном времени** через WebSocket
-        - 📚 **Управление базой знаний**
-        - 🔐 **Простая авторизация** для демонстрации
+        - 📱 **Telegram бот** для приёма обращений
+        - 📚 **Управление базой знаний** через админ-панель
+        - 📊 **Автоматическое управление статусами** обращений
         
         ## Технологии
         
         - Backend: Node.js 18, Express, TypeScript
         - База данных: PostgreSQL 15, Redis 7
         - Очереди: RabbitMQ 3.12, Celery (Python)
-        - ИИ: GigaChat API
+        - ИИ: GigaChat API (РФ)
         - WebSocket: Socket.io
+        - Telegram: Telegram Bot API
         
         ## Демо-доступы
         
@@ -130,8 +133,44 @@ const options: swaggerJsdoc.Options = {
             },
             status: {
               type: 'string',
-              enum: ['new', 'processing', 'in_progress', 'completed', 'resolved', 'rejected'],
+              enum: ['new', 'in_progress', 'completed'],
               description: 'Статус обращения'
+            },
+            source: {
+              type: 'string',
+              enum: ['web', 'telegram'],
+              description: 'Источник обращения'
+            },
+            telegram_chat_id: {
+              type: 'string',
+              description: 'Telegram Chat ID (если источник telegram)'
+            },
+            telegram_username: {
+              type: 'string',
+              description: 'Telegram username (если источник telegram)'
+            },
+            user_name: {
+              type: 'string',
+              description: 'Имя пользователя'
+            },
+            user_last_name: {
+              type: 'string',
+              description: 'Фамилия пользователя'
+            },
+            unread_operator_count: {
+              type: 'integer',
+              description: 'Количество непрочитанных сообщений для оператора',
+              default: 0
+            },
+            last_activity_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Время последней активности'
+            },
+            category_id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID категории обращения'
             },
             priority: {
               type: 'string',
@@ -546,7 +585,7 @@ const options: swaggerJsdoc.Options = {
               description: 'Фильтр по статусу',
               schema: {
                 type: 'string',
-                enum: ['new', 'processing', 'in_progress', 'completed', 'resolved', 'rejected']
+                enum: ['new', 'in_progress', 'completed']
               }
             },
             {
@@ -706,7 +745,7 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     status: {
                       type: 'string',
-                      enum: ['in_progress', 'resolved', 'rejected'],
+                      enum: ['in_progress', 'completed'],
                       description: 'Новый статус'
                     }
                   }
@@ -931,6 +970,139 @@ const options: swaggerJsdoc.Options = {
                   }
                 }
               }
+            }
+          }
+        }
+      },
+      '/api/operators/categories': {
+        get: {
+          tags: ['Categories'],
+          summary: 'Получить список категорий',
+          description: 'Возвращает все доступные категории обращений',
+          responses: {
+            '200': {
+              description: 'Список категорий',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: {
+                        type: 'boolean',
+                        example: true
+                      },
+                      data: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            id: {
+                              type: 'string',
+                              format: 'uuid'
+                            },
+                            name: {
+                              type: 'string',
+                              example: 'Водоснабжение'
+                            },
+                            description: {
+                              type: 'string'
+                            },
+                            is_active: {
+                              type: 'boolean'
+                            },
+                            created_at: {
+                              type: 'string',
+                              format: 'date-time'
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          tags: ['Categories'],
+          summary: 'Создать категорию',
+          description: 'Создаёт новую категорию обращений (требуется роль admin)',
+          security: [
+            {
+              BearerAuth: []
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['name'],
+                  properties: {
+                    name: {
+                      type: 'string',
+                      example: 'Электроснабжение'
+                    },
+                    description: {
+                      type: 'string',
+                      example: 'Вопросы по электроснабжению'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            '201': {
+              description: 'Категория создана'
+            },
+            '401': {
+              description: 'Не авторизован'
+            }
+          }
+        }
+      },
+      '/api/appeals/tracking/{trackingNumber}': {
+        get: {
+          tags: ['Appeals'],
+          summary: 'Получить обращение по номеру отслеживания',
+          description: 'Позволяет гражданину отследить своё обращение по номеру',
+          parameters: [
+            {
+              name: 'trackingNumber',
+              in: 'path',
+              required: true,
+              description: 'Номер отслеживания обращения',
+              schema: {
+                type: 'string',
+                example: 'APMH3W41J61OMDG9'
+              }
+            }
+          ],
+          responses: {
+            '200': {
+              description: 'Информация об обращении',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: {
+                        type: 'boolean',
+                        example: true
+                      },
+                      data: {
+                        $ref: '#/components/schemas/Appeal'
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '404': {
+              description: 'Обращение не найдено'
             }
           }
         }
