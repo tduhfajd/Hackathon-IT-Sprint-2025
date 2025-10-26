@@ -346,18 +346,32 @@ class TelegramBotService {
         [appealId]
       );
 
-      // Отправляем подтверждение
-      await this.bot!.sendMessage(
-        chatId,
-        '✅ Сообщение отправлено оператору. Ожидайте ответ...'
-      );
-
       // Опционально: запускаем AI для контекстного ответа
       try {
         await rabbitMQService.enqueueContextualResponse(appealId);
       } catch (error) {
         console.warn('⚠️ Failed to enqueue contextual response:', error);
       }
+
+      // Показываем кнопки управления диалогом
+      const keyboard = {
+        keyboard: [
+          [{ text: '💬 Написать сообщение' }],
+          [{ text: '✅ Завершить обращение' }, { text: '❌ Отменить обращение' }],
+          [{ text: '❓ Помощь' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+      };
+
+      // Отправляем подтверждение с кнопками
+      await this.bot!.sendMessage(
+        chatId,
+        '✅ Сообщение отправлено оператору. Ожидайте ответ...',
+        {
+          reply_markup: keyboard
+        }
+      );
     } catch (error) {
       console.error('❌ Error handling continue dialog:', error);
       await this.bot!.sendMessage(
@@ -428,6 +442,33 @@ class TelegramBotService {
       await rabbitMQService.enqueueResponseGeneration(appealId, categoryName, messageText);
 
       console.log(`✅ AI tasks queued for appeal ${appealId}`);
+
+      // Отправляем WebSocket событие оператору о новом обращении
+      const io = ChatService.getIO();
+      if (io) {
+        io.emit('appeal_updated', { appealId, hasNewMessage: true });
+        console.log(`📡 WebSocket event 'appeal_updated' sent for new appeal ${appealId}`);
+      }
+
+      // Показываем кнопки управления диалогом
+      const keyboard = {
+        keyboard: [
+          [{ text: '💬 Написать сообщение' }],
+          [{ text: '✅ Завершить обращение' }, { text: '❌ Отменить обращение' }],
+          [{ text: '❓ Помощь' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+      };
+
+      await this.bot!.sendMessage(
+        chatId,
+        '✅ <b>Обращение создано!</b>\n\nВаше обращение передано оператору. Вы можете продолжить диалог, нажав кнопку "💬 Написать сообщение" или написав новое сообщение.\n\nДля завершения обращения нажмите "✅ Завершить обращение"',
+        {
+          parse_mode: 'HTML',
+          reply_markup: keyboard
+        }
+      );
     } catch (error) {
       console.error('❌ Error handling user message:', error);
       // Уведомляем пользователя об ошибке
@@ -549,7 +590,21 @@ class TelegramBotService {
     }
 
     try {
-      await this.bot.sendMessage(parseInt(chatId), message, { parse_mode: 'HTML' });
+      // Показываем кнопки управления диалогом после ответа оператора
+      const keyboard = {
+        keyboard: [
+          [{ text: '💬 Написать сообщение' }],
+          [{ text: '✅ Завершить обращение' }, { text: '❌ Отменить обращение' }],
+          [{ text: '❓ Помощь' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+      };
+
+      await this.bot.sendMessage(parseInt(chatId), message, { 
+        parse_mode: 'HTML',
+        reply_markup: keyboard
+      });
       console.log(`✅ Message sent to Telegram chat ${chatId}`);
     } catch (error) {
       console.error(`❌ Failed to send message to Telegram chat ${chatId}:`, error);
