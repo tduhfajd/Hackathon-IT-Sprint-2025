@@ -10,7 +10,6 @@ export interface Appeal {
   category_id: string | null;
   priority: 'low' | 'medium' | 'high' | 'critical';
   status: 'new' | 'processing' | 'completed' | 'rejected' | 'in_progress' | 'resolved' | 'closed';
-  address?: string;
   submitted_at: Date;
   processed_at?: Date;
   completed_at?: Date;
@@ -33,7 +32,6 @@ export interface CreateAppealData {
   category_id?: string;
   category_suggestion?: string; // Category selected by user from dropdown
   priority?: 'low' | 'medium' | 'high' | 'critical';
-  address?: string;
 }
 
 export interface UpdateAppealData {
@@ -42,7 +40,6 @@ export interface UpdateAppealData {
   category_id?: string;
   priority?: 'low' | 'medium' | 'high' | 'critical';
   status?: 'new' | 'processing' | 'completed' | 'rejected' | 'in_progress' | 'resolved';
-  address?: string;
   processed_at?: Date;
   completed_at?: Date;
 }
@@ -61,18 +58,18 @@ export class AppealModel {
   constructor(private db: Pool) {}
 
   async create(appealData: CreateAppealData): Promise<Appeal> {
-    const { user_id, subject, description, category_id = null, category_suggestion = null, priority = 'medium', address = null } = appealData;
+    const { user_id, subject, description, category_id = null, category_suggestion = null, priority = 'medium' } = appealData;
     
     const id = uuidv4();
     const tracking_number = this.generateTrackingNumber();
     
     const query = `
-      INSERT INTO appeals (id, user_id, tracking_number, subject, description, category_id, category_suggestion, priority, address)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO appeals (id, user_id, tracking_number, subject, description, category_id, category_suggestion, priority)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
     
-    const values = [id, user_id, tracking_number, subject, description, category_id, category_suggestion, priority, address];
+    const values = [id, user_id, tracking_number, subject, description, category_id, category_suggestion, priority];
     const result = await this.db.query(query, values);
     
     return result.rows[0];
@@ -130,11 +127,6 @@ export class AppealModel {
       if ((appealData.status === 'completed' || appealData.status === 'resolved' || appealData.status === 'rejected') && !appealData.completed_at) {
         fields.push(`completed_at = NOW()`);
       }
-    }
-    
-    if (appealData.address !== undefined) {
-      fields.push(`address = $${paramCount++}`);
-      values.push(appealData.address);
     }
     
     if (appealData.processed_at !== undefined) {
