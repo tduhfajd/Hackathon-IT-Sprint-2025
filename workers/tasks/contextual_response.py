@@ -92,9 +92,21 @@ def contextual_response(appeal_id: str):
                 print(f"  ⏭️ GigaChat распознал простое сообщение - пропускаем")
                 return {'appeal_id': appeal_id, 'skipped': True, 'reason': 'gigachat_skip'}
             
-            confidence = result.get('confidence', 0.85)
-            sources = [article['title']]
-            print(f"  ✅ GigaChat сгенерировал контекстный ответ (confidence: {confidence:.2f})")
+            # Проверка на OFF_TOPIC_QUESTION
+            if suggested_text.strip() == "OFF_TOPIC_QUESTION":
+                print(f"  ⚠️ GigaChat: вопрос не относится к теме статьи '{article['title']}' (категория: {category})")
+                suggested_text = f"""⚠️ К сожалению, ваш вопрос не относится к теме текущего обращения (категория: {category}).
+
+Для получения ответа на вопрос по другой теме, пожалуйста, создайте новое обращение и выберите соответствующую категорию.
+
+Если у вас есть ещё вопросы по текущей теме, я буду рад помочь."""
+                confidence = 0.3  # Низкая уверенность — явный сигнал оператору
+                sources = []
+                print(f"  💡 Сгенерировано сообщение о несоответствии темы (confidence: {confidence:.2f})")
+            else:
+                confidence = result.get('confidence', 0.85)
+                sources = [article['title']]
+                print(f"  ✅ GigaChat сгенерировал контекстный ответ (confidence: {confidence:.2f})")
         
         except Exception as e:
             print(f"  ⚠️ Ошибка GigaChat: {e}")
