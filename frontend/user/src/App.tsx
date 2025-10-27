@@ -9,6 +9,7 @@ interface AppealForm {
   email: string;
   subject: string;
   description: string;
+  consentGiven: boolean;
 }
 
 function App() {
@@ -17,7 +18,8 @@ function App() {
     phone: '',
     email: '',
     subject: '',
-    description: ''
+    description: '',
+    consentGiven: false
   });
   const [submitted, setSubmitted] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -127,7 +129,8 @@ function App() {
                     phone: '',
                     email: '',
                     subject: '',
-                    description: ''
+                    description: '',
+                    consentGiven: false
                   });
                 }}
                 className="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors"
@@ -157,7 +160,7 @@ function App() {
             {/* Full Name */}
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                ФИО
+                ФИО <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -174,7 +177,7 @@ function App() {
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Телефон
+                Телефон <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
@@ -252,11 +255,28 @@ function App() {
               </p>
             </div>
 
+            {/* Consent Checkbox */}
+            <div className="flex items-start pt-2">
+              <input
+                type="checkbox"
+                id="consentGiven"
+                name="consentGiven"
+                checked={form.consentGiven}
+                onChange={(e) => setForm({ ...form, consentGiven: e.target.checked })}
+                required
+                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+              />
+              <label htmlFor="consentGiven" className="ml-3 text-sm text-gray-600 cursor-pointer select-none">
+                Я даю согласие на обработку указанных данных для целей рассмотрения данного обращения и обратной связи по вопросам его решения <span className="text-red-500">*</span>
+              </label>
+            </div>
+
             {/* Submit Button */}
             <div className="pt-4">
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg px-6 py-4 font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                disabled={!form.consentGiven}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg px-6 py-4 font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 Отправить обращение
               </button>
