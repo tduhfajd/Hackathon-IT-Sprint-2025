@@ -25,6 +25,9 @@ interface AppealInfo {
   description: string;
   user_name?: string;
   user_email?: string;
+  user_full_name?: string;
+  user_contact_email?: string;
+  user_phone?: string;
   source?: string;
   telegram_username?: string;
   priority?: string;
@@ -409,17 +412,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ appealId, operatorId, onClose, 
             
             {showUserInfo && (
               <div className="px-4 pb-3 grid grid-cols-2 gap-3 text-sm">
-                {appealInfo.user_name && (
+                {(appealInfo.user_full_name || appealInfo.user_name) && (
                   <div>
                     <span className="text-gray-500">ФИО:</span>
-                    <p className="font-medium text-gray-900">{appealInfo.user_name}</p>
+                    <p className="font-medium text-gray-900">{appealInfo.user_full_name || appealInfo.user_name}</p>
                   </div>
                 )}
                 
-                {appealInfo.user_email && (
+                {appealInfo.user_phone && (
+                  <div>
+                    <span className="text-gray-500">Телефон:</span>
+                    <p className="font-medium text-gray-900">{appealInfo.user_phone}</p>
+                  </div>
+                )}
+                
+                {(appealInfo.user_contact_email || appealInfo.user_email) && (
                   <div>
                     <span className="text-gray-500">Email:</span>
-                    <p className="font-medium text-gray-900">{appealInfo.user_email}</p>
+                    <p className="font-medium text-gray-900">{appealInfo.user_contact_email || appealInfo.user_email}</p>
                   </div>
                 )}
                 

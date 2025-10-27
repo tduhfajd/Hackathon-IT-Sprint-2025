@@ -488,6 +488,7 @@ user-uploads/
 
 # AI model files (if downloaded locally)
 models/
+!backend/src/models/
 *.model
 *.bin
 

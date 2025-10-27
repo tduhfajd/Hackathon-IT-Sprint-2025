@@ -76,7 +76,16 @@ export class AppealModel {
   }
 
   async findById(id: string): Promise<Appeal | null> {
-    const query = 'SELECT * FROM appeals WHERE id = $1';
+    const query = `
+      SELECT 
+        a.*,
+        u.full_name as user_full_name,
+        u.email as user_contact_email,
+        u.phone as user_phone
+      FROM appeals a
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE a.id = $1
+    `;
     const result = await this.db.query(query, [id]);
     
     return result.rows[0] || null;
