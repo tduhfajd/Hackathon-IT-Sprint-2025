@@ -9,7 +9,6 @@ interface AppealForm {
   email: string;
   subject: string;
   description: string;
-  address?: string;
 }
 
 function App() {
@@ -18,8 +17,7 @@ function App() {
     phone: '',
     email: '',
     subject: '',
-    description: '',
-    address: ''
+    description: ''
   });
   const [submitted, setSubmitted] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -40,7 +38,6 @@ function App() {
           full_name: form.fullName,
           phone: form.phone,
           email: form.email || null,
-          address: form.address || null,
           subject: form.subject,
           description: form.description
         }),
@@ -130,8 +127,7 @@ function App() {
                     phone: '',
                     email: '',
                     subject: '',
-                    description: '',
-                    address: ''
+                    description: ''
                   });
                 }}
                 className="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors"
@@ -205,22 +201,6 @@ function App() {
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="email@example.com"
-              />
-            </div>
-
-            {/* Address */}
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                Адрес (если применимо)
-              </label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="ул. Ленина, д. 25"
               />
             </div>
 

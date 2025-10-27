@@ -287,8 +287,8 @@ export class AppealController {
           return;
         }
 
-        // Citizens can only update subject, description, and address
-        const allowedFields = ['subject', 'description', 'address'];
+        // Citizens can only update subject and description
+        const allowedFields = ['subject', 'description'];
         const restrictedFields = Object.keys(updateData).filter(key => !allowedFields.includes(key));
         
         if (restrictedFields.length > 0) {

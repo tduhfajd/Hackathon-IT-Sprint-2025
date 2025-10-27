@@ -247,11 +247,6 @@ const options: swaggerJsdoc.Options = {
               type: 'string',
               description: 'Описание проблемы',
               example: 'В квартире холодно, температура 16 градусов'
-            },
-            address: {
-              type: 'string',
-              description: 'Адрес (опционально)',
-              example: 'ул. Ленина, д. 1, кв. 10'
             }
           }
         },

@@ -20,13 +20,7 @@ export const createAppealValidators = [
   body('priority')
     .optional()
     .isIn(['low', 'medium', 'high', 'critical'])
-    .withMessage('Priority must be one of: low, medium, high, critical'),
-  
-  body('address')
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage('Address must not exceed 500 characters')
+    .withMessage('Priority must be one of: low, medium, high, critical')
 ];
 
 export const updateAppealValidators = [
@@ -55,13 +49,7 @@ export const updateAppealValidators = [
   body('status')
     .optional()
     .isIn(['new', 'processing', 'completed', 'rejected', 'in_progress', 'resolved'])
-    .withMessage('Status must be one of: new, processing, completed, rejected, in_progress, resolved'),
-  
-  body('address')
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage('Address must not exceed 500 characters')
+    .withMessage('Status must be one of: new, processing, completed, rejected, in_progress, resolved')
 ];
 
 export const appealIdValidator = [
