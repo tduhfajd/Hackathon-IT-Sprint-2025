@@ -108,15 +108,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-          <p className="text-sm text-gray-700 text-center mb-2">
-            <strong>Демо-доступ для администратора:</strong>
-          </p>
-          <div className="text-center text-sm text-gray-600">
-            <p>Логин: <code className="bg-white px-2 py-1 rounded">admin</code></p>
-            <p>Пароль: <code className="bg-white px-2 py-1 rounded">admin</code></p>
-          </div>
-        </div>
 
         <div className="mt-4 text-center">
           <a
