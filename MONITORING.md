@@ -23,29 +23,82 @@
 
 ---
 
+## 📦 Мониторируемые контейнеры
+
+Всего мониторится **10 контейнеров** Smart Support:
+
+| № | Контейнер | Назначение | Healthcheck |
+|---|-----------|------------|-------------|
+| 1 | `smart-support-backend` | Node.js API сервер | ✅ Yes |
+| 2 | `smart-support-db` | PostgreSQL база данных | ✅ Yes |
+| 3 | `smart-support-redis` | Redis кэш | ✅ Yes |
+| 4 | `smart-support-rabbitmq` | RabbitMQ очередь задач | ✅ Yes |
+| 5 | `smart-support-celery-worker` | Celery worker для AI | ❌ No |
+| 6 | `smart-support-celery-beat` | Celery beat планировщик | ❌ No |
+| 7 | `smart-support-frontend-user` | Форма для граждан | ✅ Yes |
+| 8 | `smart-support-frontend-operator` | Панель оператора | ✅ Yes |
+| 9 | `smart-support-frontend-admin` | Админ-панель | ✅ Yes |
+| 10 | `smart-support-landing` | Лендинг | ✅ Yes |
+
+**Проверка статуса:**
+```bash
+docker ps --filter "name=smart-support" --format "{{.Names}}: {{.Status}}"
+```
+
+---
+
 ## 🚨 Активные алерты (4 шт.)
 
 ### 🔴 Критичные алерты:
 
-1. **Backend Container Down**
-   - Условие: Контейнер `smart-support-backend` остановлен
-   - Задержка: 2 минуты
-   - Действие: Проверьте `docker ps` и логи контейнера
+1. **Smart Support Container Down** ⭐
+   - **Мониторит:** ВСЕ 10 контейнеров Smart Support (см. таблицу выше)
+   - **Условие:** Если хотя бы 1 контейнер остановлен более 3 минут
+   - **PromQL:** `count(container_last_seen{name=~"smart-support.*"} > (time() - 120)) < 10`
+   - **Задержка:** 3 минуты
+   - **Действие:** 
+     ```bash
+     # Проверить статус
+     docker ps -a | grep smart-support
+     # Логи упавшего контейнера
+     docker logs <container_name> --tail 50
+     # Перезапуск
+     docker restart <container_name>
+     ```
 
 2. **Critical Disk Usage**
-   - Условие: Диск заполнен > 90%
-   - Задержка: 1 минута
-   - Действие: Срочно освободите место (логи, docker system prune)
+   - **Условие:** Диск заполнен > 90%
+   - **Задержка:** 1 минута
+   - **Действие:** Срочно освободите место
+     ```bash
+     # Проверить использование
+     df -h
+     # Очистить Docker
+     docker system prune -af --volumes
+     # Очистить логи
+     sudo journalctl --vacuum-time=3d
+     ```
 
 ### 🟡 Предупреждающие алерты:
 
 3. **High CPU Usage**
-   - Условие: CPU > 80% в течение 5 минут
-   - Действие: Проверьте `htop` или `docker stats`
+   - **Условие:** CPU > 80% в течение 5 минут
+   - **Действие:** 
+     ```bash
+     htop
+     docker stats
+     # Проверить нагрузку по контейнерам
+     ```
 
 4. **High Memory Usage**
-   - Условие: RAM > 85% в течение 5 минут
-   - Действие: Проверьте `free -h` или перезапустите контейнеры
+   - **Условие:** RAM > 85% в течение 5 минут
+   - **Действие:** 
+     ```bash
+     free -h
+     docker stats
+     # При необходимости перезапустить контейнеры
+     docker restart <container_name>
+     ```
 
 ---
 
@@ -57,11 +110,29 @@
 
 ### Формат уведомлений:
 
+#### 🔴 [FIRING] - Проблема обнаружена
 ```
-🔴 [FIRING] Smart Support Backend Container Down
-Backend контейнер Smart Support не работает!
-Started: 2025-10-29 18:45:00
+🔴 [FIRING] Smart Support Container Down
+Один или несколько контейнеров Smart Support остановлены!
+Проверьте 'docker ps -a | grep smart-support'
 ```
+**Что делать:** Проверьте систему и устраните проблему
+
+#### 🟢 [RESOLVED] - Проблема решена
+```
+🟢 [RESOLVED] Smart Support Container Down
+Все контейнеры Smart Support работают
+```
+**Что это значит:** Система вернулась в норму, действий не требуется
+
+### ⚠️ Ложные срабатывания
+
+Иногда возможны краткосрочные ложные алерты из-за:
+- Временного сбоя сбора метрик (< 2 минут)
+- Перезапуска Prometheus/cAdvisor
+- Сетевых задержек
+
+**Если получили [FIRING], а затем сразу [RESOLVED]** — это нормально, алерт был ложным. Все контейнеры работают.
 
 ---
 
@@ -157,9 +228,20 @@ docker exec prometheus wget -q -O- \
 container_last_seen{name=~"smart-support.*"}
 ```
 
+### Количество запущенных контейнеров Smart Support:
+```promql
+count(container_last_seen{name=~"smart-support.*"} > (time() - 120))
+```
+**Должно быть:** 10
+
 ### Docker контейнеры (CPU):
 ```promql
 rate(container_cpu_usage_seconds_total{name=~"smart-support.*"}[5m]) * 100
+```
+
+### Docker контейнеры (Memory):
+```promql
+container_memory_usage_bytes{name=~"smart-support.*"} / 1024 / 1024
 ```
 
 ---
@@ -251,6 +333,25 @@ docker restart grafana
 
 ---
 
-**Дата настройки:** 2025-10-29  
-**Версия:** 1.0
+## 📝 История изменений
+
+### Версия 1.1 (2025-10-29)
+- ✅ Улучшен алерт "Smart Support Container Down"
+  - Теперь мониторит все 10 контейнеров (было: только backend)
+  - Увеличена задержка: 2 → 3 минуты
+  - Улучшено условие проверки активности контейнеров
+  - Минимизированы ложные срабатывания
+- ✅ Добавлено объяснение формата уведомлений [FIRING] и [RESOLVED]
+- ✅ Добавлены PromQL запросы для мониторинга контейнеров
+- ✅ Добавлен раздел о ложных срабатываниях
+
+### Версия 1.0 (2025-10-29)
+- ✅ Установлены Prometheus, Grafana, Node Exporter, cAdvisor
+- ✅ Настроены Telegram уведомления
+- ✅ Созданы базовые алерты (CPU, RAM, Disk, Backend)
+
+---
+
+**Дата последнего обновления:** 2025-10-29  
+**Версия:** 1.1
 
