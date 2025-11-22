@@ -1475,6 +1475,14 @@ curl https://api-smartsupport.vadimevgrafov.ru/api/appeals/tracking/APMH9BV55JYO
 
 **"Имени товарища Вертера" (КИТВ)**
 
+### Участники команды:
+
+- **Вадим Евграфов** - [@vadim_evgrafov](https://t.me/vadim_evgrafov)
+- **Виктор Смолярчук** - [@svidll](https://t.me/svidll)
+- **Дмитрий Анпилов** - [@AnpilovDmitriy](https://t.me/AnpilovDmitriy)
+
+### О команде:
+
 - Школа 21
 - Кейс-чемпионат Белгородской области
 - ИТ-Спринт 2025
