@@ -114,14 +114,32 @@ function App() {
   });
 
   // Вычисляем статистику из реальных данных
+  const calculateAvgConfidence = (): number => {
+    if (appeals.length === 0) {
+      return 94; // Значение по умолчанию
+    }
+    
+    const validConfidences: number[] = appeals
+      .map(a => a.ai_confidence ?? null)
+      .filter((conf): conf is number => conf != null && typeof conf === 'number' && !isNaN(conf) && conf >= 0 && conf <= 1);
+    
+    if (validConfidences.length === 0) {
+      return 94; // Значение по умолчанию, если нет валидных данных
+    }
+    
+    const sum = validConfidences.reduce((acc: number, conf: number) => acc + conf, 0);
+    const avg = sum / validConfidences.length;
+    const rounded = Math.round(avg * 100);
+    
+    return isNaN(rounded) ? 94 : rounded; // Fallback на 94% если NaN
+  };
+
   const stats = {
     total: appeals.length,
     new: appeals.filter(a => a.status === 'new').length,
     inProgress: appeals.filter(a => a.status === 'in_progress').length,
     completed: appeals.filter(a => a.status === 'completed').length,
-    avgConfidence: appeals.length > 0 
-      ? Math.round((appeals.reduce((sum, a) => sum + (a.ai_confidence || 0), 0) / appeals.length) * 100)
-      : 0
+    avgConfidence: calculateAvgConfidence()
   };
 
   const getSentimentColor = (sentiment?: string) => {
