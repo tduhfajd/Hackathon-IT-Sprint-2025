@@ -95,7 +95,7 @@ class GigaChatClient:
             user_prompt = f"""Статья из базы знаний: "{article_title}"
 
 Содержание статьи:
-{article_content[:3000]}
+{article_content[:20000]}
 
 Вопрос гражданина: {question}
 
