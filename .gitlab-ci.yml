@@ -16,6 +16,8 @@ before_script:
 
 pages:
   stage: deploy
+  tags:
+    - docker
   script:
     - echo "📚 Building static site from Wiki..."
     
